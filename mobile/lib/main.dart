@@ -480,12 +480,12 @@ textInputAction: TextInputAction.next,
 const SizedBox(height: 12),
 TextField(
 controller: password,
-decoration: loginDecoration(
+decoration: _loginDecoration(
 'Password',
 Icons.lock_rounded,
 ),
 obscureText: true,
-onSubmitted: () => _submit(),
+onSubmitted: (_) => _submit(),
 ),
 if (error != null)
 Padding(
