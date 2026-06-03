@@ -1,40 +1,20 @@
-plugins {
-    id "com.android.application"
-    id "kotlin-android"
-    id "dev.flutter.flutter-gradle-plugin"
-}
-
-android {
-    namespace "com.emp.control"
-    compileSdk flutter.compileSdkVersion
-    ndkVersion "28.2.13676358"
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
-    defaultConfig {
-        applicationId "com.emp.control"
-        minSdkVersion 23
-        targetSdkVersion flutter.targetSdkVersion
-        versionCode flutter.versionCode
-        versionName flutter.versionName
-    }
-
-    buildTypes {
-        release {
-            signingConfig signingConfigs.debug
-            shrinkResources false
-            minifyEnabled false
-        }
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
     }
 }
 
-flutter {
-    source "../.."
+rootProject.buildDir = "../build"
+
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
 }
