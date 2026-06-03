@@ -1,0 +1,208 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+
+enum Role { OWNER ADMIN STAFF VIEWER }
+enum ServerType { PAPER VELOCITY OTHER }
+enum ServerStatus { ONLINE OFFLINE DEGRADED }
+enum AlertSeverity { CRITICAL WARNING INFO }
+enum AlertCategory { SECURITY PERFORMANCE SERVER PLAYER NETWORK }
+enum ConsoleCategory { SERVER COMMAND SECURITY PERFORMANCE PLAYER PLUGIN ERROR }
+enum RemoteCommandStatus { PENDING SENT EXECUTED FAILED BLOCKED EXPIRED }
+enum CommandPolicyAction { BLOCK ALERT_ONLY REQUIRE_CONFIRMATION ALLOW }
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+  servers   Server[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  workspaceId  String
+  username     String   @unique
+  email        String   @unique
+  displayName  String
+  passwordHash String
+  role         Role     @default(VIEWER)
+  disabledAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  sessions     UserSession[]
+  deviceTokens DeviceToken[]
+  auditLogs    AuditLog[]
+  commands     RemoteCommand[]
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  refreshHash  String
+  userAgent    String?
+  ipAddress    String?
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String
+  platform  String
+  enabled   Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Server {
+  id                  String       @id @default(cuid())
+  workspaceId          String
+  displayName          String
+  type                 ServerType   @default(PAPER)
+  status               ServerStatus @default(OFFLINE)
+  lastSeenAt           DateTime?
+  version              String?
+  address              String?
+  agentPublicIdentity  String?
+  panicMode            Boolean      @default(false)
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  workspace            Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  credentials          AgentCredential[]
+  metrics              ServerMetric[]
+  latestSnapshot       ServerLatestSnapshot?
+  alerts               Alert[]
+  logs                 ConsoleLog[]
+  securityEvents       SecurityEvent[]
+  commands             RemoteCommand[]
+  commandPolicies      CommandPolicy[]
+  allowedOps           AllowedOp[]
+  auditLogs            AuditLog[]
+}
+
+model AgentCredential {
+  id                 String   @id @default(cuid())
+  serverId            String
+  publicIdentity      String
+  secretHash          String
+  pairingTokenHash    String?
+  pairingExpiresAt    DateTime?
+  revokedAt           DateTime?
+  lastRotatedAt       DateTime @default(now())
+  createdAt           DateTime @default(now())
+  server              Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model ServerMetric {
+  id        String   @id @default(cuid())
+  serverId  String
+  snapshot  Json
+  createdAt DateTime @default(now())
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  @@index([serverId, createdAt])
+}
+
+model ServerLatestSnapshot {
+  serverId  String   @id
+  snapshot  Json
+  updatedAt DateTime @updatedAt
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+}
+
+model Alert {
+  id             String        @id @default(cuid())
+  serverId       String?
+  severity       AlertSeverity
+  category       AlertCategory
+  title          String
+  message        String
+  metadata       Json?
+  acknowledgedAt DateTime?
+  acknowledgedBy String?
+  createdAt      DateTime      @default(now())
+  server         Server?       @relation(fields: [serverId], references: [id], onDelete: SetNull)
+  @@index([serverId, createdAt])
+}
+
+model ConsoleLog {
+  id        String          @id @default(cuid())
+  serverId  String
+  level     String
+  source    String
+  message   String
+  category  ConsoleCategory
+  createdAt DateTime        @default(now())
+  server    Server          @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  @@index([serverId, createdAt])
+}
+
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  serverId  String
+  type      String
+  actor     String?
+  subject   String?
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  @@index([serverId, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  serverId  String?
+  action    String
+  target    String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  server    Server?  @relation(fields: [serverId], references: [id], onDelete: SetNull)
+  @@index([serverId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model RemoteCommand {
+  id          String              @id @default(cuid())
+  serverId    String
+  userId      String
+  command     String
+  status      RemoteCommandStatus @default(PENDING)
+  nonce       String
+  requestedAt DateTime            @default(now())
+  sentAt      DateTime?
+  executedAt  DateTime?
+  result      String?
+  error       String?
+  server      Server              @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([serverId, requestedAt])
+}
+
+model CommandPolicy {
+  id        String              @id @default(cuid())
+  serverId  String
+  command   String
+  action    CommandPolicyAction @default(ALERT_ONLY)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  server    Server              @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  @@unique([serverId, command])
+}
+
+model AllowedOp {
+  id        String   @id @default(cuid())
+  serverId  String
+  uuid      String
+  name      String?
+  createdAt DateTime @default(now())
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  @@unique([serverId, uuid])
+}
