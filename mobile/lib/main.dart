@@ -783,7 +783,7 @@ return SingleChildScrollView(
           _FeatureSpec('Players', Icons.groups_rounded, 'Online roster'),
           _FeatureSpec('Plugins', Icons.extension_rounded, 'Plugin insight'),
           _FeatureSpec('Settings', Icons.tune_rounded, 'Server policy'),
-          _FeatureSpec('Files', Icons.folder_lock_rounded, 'Disabled in MVP'),
+          _FeatureSpec('Files', Icons.folder_rounded, 'Disabled in MVP'),
           _FeatureSpec('Stats', Icons.query_stats_rounded, 'Live health'),
         ]
             .map(
@@ -998,7 +998,7 @@ Widget build(BuildContext context) => InkWell(
 onTap: onTap,
 borderRadius: BorderRadius.circular(18),
 child: Container(
-minHeight: 86,
+constraints: const BoxConstraints(minHeight: 86),
 padding: const EdgeInsets.all(12),
 decoration: BoxDecoration(
 borderRadius: BorderRadius.circular(18),
@@ -1504,8 +1504,7 @@ color: online ? Colors.greenAccent : Colors.redAccent,
 shape: BoxShape.circle,
 boxShadow: [
 BoxShadow(
-color: (online ? Colors.greenAccent : Colors.redAccent)
-.withOpacity(.7),
+color: (online ? Colors.greenAccent : Colors.redAccent).withOpacity(.7),
 blurRadius: 10,
 ),
 ],
@@ -1519,7 +1518,7 @@ const _LuxuryBackground();
 @override
 Widget build(BuildContext context) => Container(
 decoration: const BoxDecoration(
-radialGradient: RadialGradient(
+gradient: RadialGradient(
 center: Alignment(-.8, -.9),
 radius: 1.2,
 colors: [Color(0xFF2C0E55), _black],
