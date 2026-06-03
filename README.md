@@ -132,7 +132,7 @@ What you should see:
 Copy the plugin JAR:
 
 ```bash
-cp /path/to/Free-Minecraft-Hosts/dist/EMPControlAgent.jar /path/to/paper-test-server/plugins/EMPControlAgent.jar
+cp /path/to/EMP-Control/dist/EMPControlAgent.jar /path/to/paper-test-server/plugins/EMPControlAgent.jar
 ```
 
 Restart the Paper server. In the server console, you should see `EMP Control Agent enabled`.
@@ -284,7 +284,40 @@ To download the APK from GitHub:
 
 The workflow builds `mobile/build/app/outputs/flutter-apk/app-release.apk`, copies it to `dist/EMP-Control.apk`, and uploads that file as an artifact.
 
-## 11. iOS status
+
+## 12. Merging this PR when GitHub reports conflicts
+
+The old Free Minecraft Hosts content is not important for this project. If GitHub says this PR has merge conflicts, resolve them by keeping the EMP Control version of the files from this PR branch.
+
+Click sequence in GitHub:
+
+1. Open the pull request.
+2. Click **Resolve conflicts**.
+3. For each conflicted file, keep the EMP Control content from this PR branch. In practice, the final repository should keep this README and these folders/files: `backend/`, `plugin/`, `mobile/`, `mobile/pubspec.yaml`, `mobile/lib/`, `mobile/android/`, `mobile/scripts/build_release_apk.sh`, and `.github/workflows/android-apk.yml`.
+4. Delete all conflict marker lines: `<<<<<<<`, `=======`, and `>>>>>>>`.
+5. Click **Mark as resolved** for each file.
+6. Click **Commit merge**.
+7. Return to the PR page and click **Merge pull request**.
+8. Click **Confirm merge**.
+
+After merge, `main` should be the EMP Control project. It should not show the old Free Minecraft Hosts README content.
+
+## 13. Running the APK workflow after merge
+
+Click sequence in GitHub:
+
+1. Open the repository on GitHub.
+2. Click the **Actions** tab.
+3. In the left sidebar, click **Build EMP Control Android APK**.
+4. Click **Run workflow**.
+5. Choose branch **main**.
+6. Optional: set `api_base_url` to the backend URL you want baked into the APK, for example `http://10.0.2.2:3000`, `http://192.168.1.25:3000`, or a tunnel URL.
+7. Click the green **Run workflow** button.
+8. Wait for the run to finish successfully.
+9. Open the completed workflow run.
+10. Scroll to **Artifacts** and download **EMP-Control.apk**.
+
+## 14. iOS status
 
 iOS is not the focus of this MVP stabilization pass. Building iOS later requires:
 
