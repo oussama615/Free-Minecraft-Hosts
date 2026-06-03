@@ -1,10 +1,16 @@
 name: Build EMP Control Android APK
 
-"on":
+on:
   workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: "Backend API URL for the APK"
+        required: true
+        default: "http://10.0.2.2:3000"
 
 jobs:
   build-android-apk:
+    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
@@ -14,14 +20,17 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: "temurin"
           java-version: "17"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.24.5"
-          channel: stable
+          channel: "stable"
+
+      - name: Show Flutter version
+        run: flutter --version
 
       - name: Install Flutter dependencies
         working-directory: mobile
@@ -29,7 +38,7 @@ jobs:
 
       - name: Build release APK
         working-directory: mobile
-        run: flutter build apk --release --dart-define=API_BASE_URL=http://10.0.2.2:3000
+        run: flutter build apk --release --dart-define=API_BASE_URL=${{ github.event.inputs.api_base_url }}
 
       - name: Copy APK to dist
         run: |

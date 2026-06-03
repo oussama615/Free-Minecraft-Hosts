@@ -1,0 +1,16 @@
+name: EMPControlAgent
+version: 0.1.0
+main: com.empcontrol.agent.EMPControlAgentPlugin
+api-version: '1.20'
+author: EMP Control
+commands:
+  empcontrol:
+    description: Manage the EMP Control Agent
+    usage: /empcontrol <status|link|unlink|reload|testalert|panic>
+    aliases: [empc]
+permissions:
+  empcontrol.admin: { default: op }
+  empcontrol.link: { default: op }
+  empcontrol.reload: { default: op }
+  empcontrol.panic: { default: op }
+  empcontrol.status: { default: op }
