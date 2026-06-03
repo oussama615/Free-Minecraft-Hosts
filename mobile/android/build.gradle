@@ -1,18 +1,36 @@
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+android {
+    namespace "com.emp.control"
+    compileSdk flutter.compileSdkVersion
+    ndkVersion "26.1.10909125"
+    ndkVersion "28.2.13676358"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
-}
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 
-rootProject.buildDir = "../build"
-subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
-    project.evaluationDependsOn(":app")
-}
+    defaultConfig {
+        applicationId "com.emp.control"
+        minSdkVersion 23
+        targetSdkVersion flutter.targetSdkVersion
+        versionCode flutter.versionCode
+        versionName flutter.versionName
+    }
 
-tasks.register("clean", Delete) {
-    delete rootProject.buildDir
-}
+    buildTypes {
+        release {
+            // Local MVP builds use the debug key so beginners can create an installable APK without Android signing setup.
+            // Replace with a real release signingConfig before production distribution.
+            signingConfig signingConfigs.debug
+            shrinkResources false
+            minifyEnabled false
+        }
