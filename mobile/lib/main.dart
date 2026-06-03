@@ -231,7 +231,29 @@ class _ListPage extends StatelessWidget {
   final List<String> items;
 
   @override
-  Widget build(BuildContext context) => SingleChildScrollView(padding: const EdgeInsets.all(18), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900)), Text(subtitle, style: const TextStyle(color: _muted)), const SizedBox(height: 16), ...items.map((e) => Padding(padding: const EdgeInsets.only(bottom: 10), child: _Card(child: Row(children: [const Icon(Icons.bolt_rounded, color: _neon), const SizedBox(width: 12), Expanded(child: Text(e))])))]));
+  Widget build(BuildContext context) => SingleChildScrollView(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900)),
+            Text(subtitle, style: const TextStyle(color: _muted)),
+            const SizedBox(height: 16),
+            ...items.map(
+              (e) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _Card(
+                  child: Row(children: [
+                    const Icon(Icons.bolt_rounded, color: _neon),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(e)),
+                  ]),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
 }
 
 class _About extends StatelessWidget {
