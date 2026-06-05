@@ -1,0 +1,44 @@
+theme:
+  prefix: "&bɪꜱʟᴀɴᴅꜱ&8 » &7"
+
+  colors:
+    primary: "&b"
+    secondary: "&3"
+    accent: "&e"
+    success: "&a"
+    warning: "&6"
+    error: "&c"
+    info: "&9"
+    magic: "&5"
+    weapon: "&d"
+    money: "&a"
+    fragments: "&d"
+    level: "&b"
+    xp: "&e"
+    muted: "&8"
+    text: "&7"
+    white: "&f"
+    dark: "&8"
+
+  symbols:
+    level: "⭐"
+    xp: "✦"
+    money: "$"
+    fragments: "◆"
+    locked: "✖"
+    unlocked: "✔"
+    arrow: "➜"
+    dot: "▪"
+    warning: "⚠"
+    sword: "⚔"
+    magic: "✦"
+    stats: "✦"
+    island: "🌍"
+    quest: "📜"
+    profile: "⭐"
+
+  emojis:
+    enabled: true
+
+  small-caps:
+    enabled: true

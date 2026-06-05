@@ -1,0 +1,52 @@
+scoreboard:
+  enabled: true
+  only-show-when-active-quest: true
+  update-interval-ticks: 20
+  title: "&b&lɪꜱʟᴀɴᴅꜱ ʀᴘɢ"
+  lines:
+    - "&8&m----------------"
+    - "&fᴘʟᴀʏᴇʀ: &b%player%"
+    - "&fʟᴇᴠᴇʟ: &e%level%"
+    - ""
+    - "&b&lᴀᴄᴛɪᴠᴇ ǫᴜᴇꜱᴛ"
+    - "&f%quest_name%"
+    - "&7%quest_objective%"
+    - "&e%quest_progress%&8/&e%quest_amount%"
+    - ""
+    - "&a$ &f%money% &8| &d◆ &f%fragments%"
+    - "&8&m----------------"
+  no-active-quest:
+    enabled: false
+    title: "&b&lɪꜱʟᴀɴᴅꜱ ʀᴘɢ"
+    lines:
+      - "&8&m----------------"
+      - "&fᴘʟᴀʏᴇʀ: &b%player%"
+      - "&fʟᴇᴠᴇʟ: &e%level%"
+      - ""
+      - "&7ɴᴏ ᴀᴄᴛɪᴠᴇ ǫᴜᴇꜱᴛ"
+      - "&7ᴏᴘᴇɴ &b/islands quests"
+      - ""
+      - "&a$ &f%money% &8| &d◆ &f%fragments%"
+      - "&8&m----------------"
+  completed-quest-display:
+    enabled: true
+    duration-ticks: 80
+    title: "&a&lǫᴜᴇꜱᴛ ᴄᴏᴍᴘʟᴇᴛᴇ"
+    lines:
+      - "&8&m----------------"
+      - "&a✔ &f%quest_name%"
+      - ""
+      - "&7ʀᴇᴡᴀʀᴅꜱ:"
+      - "&e%quest_xp% xᴘ"
+      - "&a$ %quest_money%"
+      - "&d◆ %quest_fragments%"
+      - "&8&m----------------"
+  conflict-handling:
+    restore-previous-scoreboard: true
+    clear-on-disable: true
+objective-formats:
+  KILL: "ᴋɪʟʟ &e%quest_amount% &7%quest_target%"
+  BOSS_KILL: "ᴅᴇꜰᴇᴀᴛ &c%quest_target%"
+  COLLECT: "ᴄᴏʟʟᴇᴄᴛ &e%quest_amount% &7%quest_target%"
+  REACH_LEVEL: "ʀᴇᴀᴄʜ ʟᴇᴠᴇʟ &e%quest_amount%"
+  VISIT_ISLAND: "ᴠɪꜱɪᴛ &b%quest_target%"

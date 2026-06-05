@@ -1,3 +1,3 @@
 package net.hivel.islandsrpg.gui;
-import net.hivel.islandsrpg.IslandsRPGPlugin; import net.hivel.islandsrpg.util.ColorUtil; import org.bukkit.*; import org.bukkit.entity.Player; import org.bukkit.inventory.Inventory;
-public class WeaponsGui { private final IslandsRPGPlugin p; public WeaponsGui(IslandsRPGPlugin p){this.p=p;} public void open(Player pl){Inventory inv=Bukkit.createInventory(null,54, ColorUtil.color("&8ᴡᴇᴀᴘᴏɴꜱ")); int s=0; for(var w:p.weapons().all()) inv.setItem(s++,p.weapons().item(w.id())); for(var m:p.magic().all()) inv.setItem(s++,p.magic().item(m.id())); pl.openInventory(inv);} }
+import net.hivel.islandsrpg.IslandsRPGPlugin; import org.bukkit.entity.Player;
+public class WeaponsGui { private final IslandsRPGPlugin p; public WeaponsGui(IslandsRPGPlugin p){this.p=p;} public void open(Player player){p.guis().openWeapons(player);} }

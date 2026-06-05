@@ -1,3 +1,3 @@
 package net.hivel.islandsrpg.gui;
-import net.hivel.islandsrpg.IslandsRPGPlugin; import net.hivel.islandsrpg.data.PlayerData; import net.hivel.islandsrpg.util.*; import org.bukkit.*; import org.bukkit.entity.Player; import org.bukkit.inventory.Inventory; import java.util.*;
-public class ProfileGui { private final IslandsRPGPlugin p; public ProfileGui(IslandsRPGPlugin p){this.p=p;} public void open(Player pl){PlayerData d=p.data().get(pl); Inventory inv=Bukkit.createInventory(null,27,ColorUtil.color("&8ᴘʀᴏꜰɪʟᴇ")); inv.setItem(13,new ItemBuilder(Material.PLAYER_HEAD).name("&6"+pl.getName()).lore(List.of("&7ʟᴇᴠᴇʟ: &f"+d.level,"&7xᴘ: &f"+d.xp+"/"+p.levels().requiredXp(d.level),"&7ᴍᴏɴᴇʏ: &f"+d.money,"&7ꜰʀᴀɢꜱ: &f"+d.fragments,"&7ᴘᴏɪɴᴛꜱ: &f"+d.statPoints)).build()); pl.openInventory(inv);} }
+import net.hivel.islandsrpg.IslandsRPGPlugin; import org.bukkit.entity.Player;
+public class ProfileGui { private final IslandsRPGPlugin p; public ProfileGui(IslandsRPGPlugin p){this.p=p;} public void open(Player player){p.guis().openProfile(player);} }

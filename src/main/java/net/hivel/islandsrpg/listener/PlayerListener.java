@@ -1,3 +1,16 @@
 package net.hivel.islandsrpg.listener;
-import net.hivel.islandsrpg.IslandsRPGPlugin; import org.bukkit.event.*; import org.bukkit.event.player.*;
-public class PlayerListener implements Listener { private final IslandsRPGPlugin p; public PlayerListener(IslandsRPGPlugin p){this.p=p;} @EventHandler public void join(PlayerJoinEvent e){p.data().load(e.getPlayer());} @EventHandler public void quit(PlayerQuitEvent e){p.data().unload(e.getPlayer());} @EventHandler public void held(PlayerItemHeldEvent e){} }
+
+import net.hivel.islandsrpg.IslandsRPGPlugin;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+
+public class PlayerListener implements Listener {
+    private final IslandsRPGPlugin plugin;
+    public PlayerListener(IslandsRPGPlugin plugin) { this.plugin = plugin; }
+    @EventHandler public void join(PlayerJoinEvent event) { plugin.data().load(event.getPlayer()); plugin.questScoreboards().onJoin(event.getPlayer()); }
+    @EventHandler public void quit(PlayerQuitEvent event) { plugin.questScoreboards().onQuit(event.getPlayer()); plugin.data().unload(event.getPlayer()); }
+    @EventHandler public void held(PlayerItemHeldEvent event) { }
+}

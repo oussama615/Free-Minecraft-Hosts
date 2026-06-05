@@ -1,0 +1,97 @@
+guis:
+  main:
+    title: "&8ɪꜱʟᴀɴᴅꜱ ʀᴘɢ"
+    size: 45
+    filler:
+      enabled: true
+      material: "BLACK_STAINED_GLASS_PANE"
+      name: "&8"
+      slots: [0,1,2,3,4,5,6,7,8,36,37,38,39,40,41,42,43,44]
+    items:
+      stats:
+        slot: 20
+        material: "IRON_SWORD"
+        name: "&b⚔ ꜱᴛᴀᴛꜱ"
+        lore: ["&7ᴜᴘɢʀᴀᴅᴇ ʏᴏᴜʀ ᴘᴏᴡᴇʀ.", "", "&3➜ &fᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"]
+        action: "OPEN_STATS"
+      islands:
+        slot: 22
+        material: "GRASS_BLOCK"
+        name: "&a🌍 ɪꜱʟᴀɴᴅꜱ"
+        lore: ["&7ᴛʀᴀᴠᴇʟ ᴛᴏ ᴜɴʟᴏᴄᴋᴇᴅ ɪꜱʟᴀɴᴅꜱ.", "", "&3➜ &fᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"]
+        action: "OPEN_ISLANDS"
+      quests:
+        slot: 24
+        material: "BOOK"
+        name: "&e📜 ǫᴜᴇꜱᴛꜱ"
+        lore: ["&7ꜰᴏʟʟᴏᴡ ʏᴏᴜʀ ᴘʀᴏɢʀᴇꜱꜱɪᴏɴ.", "", "&3➜ &fᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"]
+        action: "OPEN_QUESTS"
+      weapons:
+        slot: 30
+        material: "DIAMOND_SWORD"
+        name: "&d🗡 ᴡᴇᴀᴘᴏɴꜱ"
+        lore: ["&7ᴠɪᴇᴡ ᴄᴜꜱᴛᴏᴍ ᴡᴇᴀᴘᴏɴꜱ.", "", "&3➜ &fᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"]
+        glow: true
+        action: "OPEN_WEAPONS"
+      profile:
+        slot: 32
+        material: "PLAYER_HEAD"
+        name: "&f⭐ ᴘʀᴏꜰɪʟᴇ"
+        lore: ["&7ʟᴇᴠᴇʟ: &b%level%", "&7xᴘ: &e%xp%&8/&f%required_xp%", "&7ᴍᴏɴᴇʏ: &a%money%", "&7ꜰʀᴀɢᴍᴇɴᴛꜱ: &d%fragments%", "", "&3➜ &fᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"]
+        action: "OPEN_PROFILE"
+  stats:
+    title: "&8ꜱᴛᴀᴛꜱ"
+    size: 54
+    filler: {enabled: true, material: "GRAY_STAINED_GLASS_PANE", name: "&8"}
+    items:
+      melee: {slot: 20, material: "IRON_AXE", name: "&c⚔ ᴍᴇʟᴇᴇ", lore: ["&7ᴄᴜʀʀᴇɴᴛ: &f%stat_melee%", "&7ᴀᴠᴀɪʟᴀʙʟᴇ: &b%stat_points%", "", "&aʟᴇꜰᴛ ᴄʟɪᴄᴋ &7+1", "&eꜱʜɪꜰᴛ ᴄʟɪᴄᴋ &7+10", "&9ʀɪɢʜᴛ ᴄʟɪᴄᴋ &7ɪɴꜰᴏ"], actions: {left: "STAT_ADD:MELEE:1", shift_left: "STAT_ADD:MELEE:10", right: "STAT_INFO:MELEE"}}
+      defence: {slot: 21, material: "IRON_CHESTPLATE", name: "&9🛡 ᴅᴇꜰᴇɴᴄᴇ", lore: ["&7ᴄᴜʀʀᴇɴᴛ: &f%stat_defence%", "&7ᴀᴠᴀɪʟᴀʙʟᴇ: &b%stat_points%"], actions: {left: "STAT_ADD:DEFENCE:1", shift_left: "STAT_ADD:DEFENCE:10", right: "STAT_INFO:DEFENCE"}}
+      sword: {slot: 22, material: "DIAMOND_SWORD", name: "&d🗡 ꜱᴡᴏʀᴅ", lore: ["&7ᴄᴜʀʀᴇɴᴛ: &f%stat_sword%", "&7ᴀᴠᴀɪʟᴀʙʟᴇ: &b%stat_points%"], actions: {left: "STAT_ADD:SWORD:1", shift_left: "STAT_ADD:SWORD:10", right: "STAT_INFO:SWORD"}}
+      magic: {slot: 23, material: "ENCHANTED_BOOK", name: "&5✦ ᴍᴀɢɪᴄ", lore: ["&7ᴄᴜʀʀᴇɴᴛ: &f%stat_magic%", "&7ᴀᴠᴀɪʟᴀʙʟᴇ: &b%stat_points%"], actions: {left: "STAT_ADD:MAGIC:1", shift_left: "STAT_ADD:MAGIC:10", right: "STAT_INFO:MAGIC"}}
+      luck: {slot: 24, material: "RABBIT_FOOT", name: "&a☘ ʟᴜᴄᴋ", lore: ["&7ᴄᴜʀʀᴇɴᴛ: &f%stat_luck%", "&7ᴀᴠᴀɪʟᴀʙʟᴇ: &b%stat_points%"], actions: {left: "STAT_ADD:LUCK:1", shift_left: "STAT_ADD:LUCK:10", right: "STAT_INFO:LUCK"}}
+      points: {slot: 40, material: "NETHER_STAR", name: "&e✦ ᴀᴠᴀɪʟᴀʙʟᴇ ᴘᴏɪɴᴛꜱ", lore: ["&7ᴘᴏɪɴᴛꜱ: &b%stat_points%"], glow: true, action: "NONE"}
+      back: {slot: 49, material: "ARROW", name: "&c← ʙᴀᴄᴋ", action: "OPEN_MAIN"}
+  islands:
+    title: "&8ɪꜱʟᴀɴᴅꜱ"
+    size: 54
+    filler: {enabled: true, material: "BLACK_STAINED_GLASS_PANE", name: "&8"}
+    island-slots: [10,11,12,13,14,15,16]
+    locked:
+      material: "GRAY_DYE"
+      name: "&c✖ %island_name%"
+      lore: ["&7ʀᴇǫᴜɪʀᴇᴅ ʟᴇᴠᴇʟ: &f%required_level%", "&7ʏᴏᴜʀ ʟᴇᴠᴇʟ: &b%level%", "", "&cʟᴏᴄᴋᴇᴅ"]
+      action: "NONE"
+    unlocked:
+      material: "%island_icon%"
+      name: "&a✔ %island_name%"
+      lore: ["&7ʀᴇǫᴜɪʀᴇᴅ ʟᴇᴠᴇʟ: &f%required_level%", "", "&aᴄʟɪᴄᴋ ᴛᴏ ᴛʀᴀᴠᴇʟ"]
+      glow: true
+      action: "ISLAND_TELEPORT:%island_id%"
+    items:
+      back: {slot: 49, material: "ARROW", name: "&c← ʙᴀᴄᴋ", action: "OPEN_MAIN"}
+  quests:
+    title: "&8ǫᴜᴇꜱᴛꜱ"
+    size: 54
+    filler: {enabled: true, material: "GRAY_STAINED_GLASS_PANE", name: "&8"}
+    quest-slots: [10,11,12,13,14,15,16,19,20,21,22,23,24,25]
+    statuses:
+      not_started: {material: "BOOK", name: "&e📜 %quest_name%", lore: ["&7ᴘʀᴏɢʀᴇꜱꜱ: &f%quest_progress%/%quest_amount%", "&7%quest_objective%", "", "&7ʀᴇᴡᴀʀᴅꜱ:", "&8▪ &e%quest_xp% xᴘ", "&8▪ &a%quest_money% ᴍᴏɴᴇʏ", "&8▪ &d%quest_fragments% ꜰʀᴀɢꜱ", "", "&3➜ &fᴄʟɪᴄᴋ ᴛᴏ ꜱᴛᴀʀᴛ"], action: "QUEST_START:%quest_id%"}
+      active: {material: "WRITABLE_BOOK", name: "&b✦ %quest_name%", lore: ["&7ᴘʀᴏɢʀᴇꜱꜱ: &e%quest_progress%&8/&e%quest_amount%", "&7%quest_objective%", "", "&bᴀᴄᴛɪᴠᴇ"], glow: true, action: "NONE"}
+      completed: {material: "LIME_DYE", name: "&a✔ %quest_name%", lore: ["&aᴄᴏᴍᴘʟᴇᴛᴇᴅ"], action: "NONE"}
+      locked: {material: "GRAY_DYE", name: "&c✖ %quest_name%", lore: ["&cʟᴏᴄᴋᴇᴅ"], action: "NONE"}
+    items:
+      back: {slot: 49, material: "ARROW", name: "&c← ʙᴀᴄᴋ", action: "OPEN_MAIN"}
+  profile:
+    title: "&8ᴘʀᴏꜰɪʟᴇ"
+    size: 27
+    filler: {enabled: true, material: "BLACK_STAINED_GLASS_PANE", name: "&8"}
+    items:
+      profile: {slot: 13, material: "PLAYER_HEAD", name: "&b%player%", lore: ["&7ʟᴇᴠᴇʟ: &e%level%", "&7xᴘ: &e%xp%&8/&f%required_xp%", "&7ᴍᴏɴᴇʏ: &a%money%", "&7ꜰʀᴀɢꜱ: &d%fragments%", "&7ᴘᴏɪɴᴛꜱ: &b%stat_points%"], glow: true, action: "NONE"}
+      back: {slot: 22, material: "ARROW", name: "&c← ʙᴀᴄᴋ", action: "OPEN_MAIN"}
+  weapons:
+    title: "&8ᴡᴇᴀᴘᴏɴꜱ"
+    size: 54
+    filler: {enabled: true, material: "GRAY_STAINED_GLASS_PANE", name: "&8"}
+    weapon-slots: [10,11,12,13,14,15,16,19,20,21,22,23,24,25]
+    items:
+      back: {slot: 49, material: "ARROW", name: "&c← ʙᴀᴄᴋ", action: "OPEN_MAIN"}

@@ -1,8 +1,145 @@
 package net.hivel.islandsrpg;
-import net.hivel.islandsrpg.boss.*; import net.hivel.islandsrpg.command.CommandManager; import net.hivel.islandsrpg.currency.CurrencyService; import net.hivel.islandsrpg.data.PlayerDataManager; import net.hivel.islandsrpg.drop.DropService; import net.hivel.islandsrpg.gui.GuiManager; import net.hivel.islandsrpg.hook.FloodgateHook; import net.hivel.islandsrpg.island.IslandService; import net.hivel.islandsrpg.level.LevelService; import net.hivel.islandsrpg.listener.*; import net.hivel.islandsrpg.magic.MagicItemService; import net.hivel.islandsrpg.mob.*; import net.hivel.islandsrpg.quest.QuestService; import net.hivel.islandsrpg.stats.StatsService; import net.hivel.islandsrpg.visual.*; import net.hivel.islandsrpg.weapon.WeaponService; import org.bukkit.NamespacedKey; import org.bukkit.configuration.file.*; import org.bukkit.plugin.java.JavaPlugin; import java.io.File;
-public class IslandsRPGPlugin extends JavaPlugin { private PlayerDataManager data; private LevelService levels; private CurrencyService currency; private StatsService stats; private IslandService islands; private QuestService quests; private DropService drops; private WeaponService weapons; private MagicItemService magic; private CustomMobService mobs; private MobSpawnService spawns; private BossService bosses; private BossBarService bossBars; private ParticleService particles; private ActionBarService actionbar; private GuiManager guis; private FloodgateHook floodgate; private FileConfiguration messages;
- public void onEnable(){saveDefaultConfig(); saveResource("messages.yml",false); loadMessages(); data=new PlayerDataManager(this); drops=new DropService(this); levels=new LevelService(this); currency=new CurrencyService(this); stats=new StatsService(this); islands=new IslandService(this); quests=new QuestService(this); weapons=new WeaponService(this); magic=new MagicItemService(this); mobs=new CustomMobService(this); bosses=new BossService(this); bossBars=new BossBarService(this); spawns=new MobSpawnService(this); particles=new ParticleService(this); actionbar=new ActionBarService(this); guis=new GuiManager(this); floodgate=new FloodgateHook(); reloadAll(); getServer().getPluginManager().registerEvents(new PlayerListener(this),this); getServer().getPluginManager().registerEvents(new CombatListener(this),this); getServer().getPluginManager().registerEvents(new MobListener(this),this); getServer().getPluginManager().registerEvents(new GuiListener(this),this); getServer().getPluginManager().registerEvents(new QuestListener(),this); new CommandManager(this); actionbar.start(); particles.start(); spawns.start(); getLogger().info("Islands RPG enabled."); }
- public void onDisable(){ if(data!=null)data.saveAll(); if(actionbar!=null)actionbar.stop(); if(particles!=null)particles.stop(); if(spawns!=null)spawns.stop(); if(bossBars!=null)bossBars.removeAll(); }
- public void reloadAll(){reloadConfig(); loadMessages(); levels.reload(); islands.reload(); quests.reload(); weapons.reload(); magic.reload(); mobs.reload(); bosses.reload(); if(actionbar!=null)actionbar.start();}
- private void loadMessages(){messages=YamlConfiguration.loadConfiguration(new File(getDataFolder(),"messages.yml"));}
- public String message(String key){return messages.getString(key,key);} public boolean emojis(){return getConfig().getBoolean("visuals.emojis",true);} public NamespacedKey key(String key){return new NamespacedKey(this,key);} public PlayerDataManager data(){return data;} public LevelService levels(){return levels;} public CurrencyService currency(){return currency;} public StatsService stats(){return stats;} public IslandService islands(){return islands;} public QuestService quests(){return quests;} public DropService drops(){return drops;} public WeaponService weapons(){return weapons;} public MagicItemService magic(){return magic;} public CustomMobService mobs(){return mobs;} public MobSpawnService spawns(){return spawns;} public BossService bosses(){return bosses;} public BossBarService bossBars(){return bossBars;} public ParticleService particles(){return particles;} public ActionBarService actionbar(){return actionbar;} public GuiManager guis(){return guis;} public FloodgateHook floodgate(){return floodgate;} }
+
+import net.hivel.islandsrpg.boss.*;
+import net.hivel.islandsrpg.command.CommandManager;
+import net.hivel.islandsrpg.currency.CurrencyService;
+import net.hivel.islandsrpg.data.PlayerDataManager;
+import net.hivel.islandsrpg.drop.DropService;
+import net.hivel.islandsrpg.gui.GuiManager;
+import net.hivel.islandsrpg.hook.FloodgateHook;
+import net.hivel.islandsrpg.island.IslandService;
+import net.hivel.islandsrpg.level.LevelService;
+import net.hivel.islandsrpg.listener.*;
+import net.hivel.islandsrpg.magic.MagicItemService;
+import net.hivel.islandsrpg.mob.*;
+import net.hivel.islandsrpg.placeholder.PlaceholderService;
+import net.hivel.islandsrpg.quest.QuestService;
+import net.hivel.islandsrpg.scoreboard.*;
+import net.hivel.islandsrpg.stats.StatsService;
+import net.hivel.islandsrpg.theme.ThemeService;
+import net.hivel.islandsrpg.visual.*;
+import net.hivel.islandsrpg.weapon.WeaponService;
+import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.file.*;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+
+public class IslandsRPGPlugin extends JavaPlugin {
+    private PlayerDataManager data;
+    private LevelService levels;
+    private CurrencyService currency;
+    private StatsService stats;
+    private IslandService islands;
+    private QuestService quests;
+    private DropService drops;
+    private WeaponService weapons;
+    private MagicItemService magic;
+    private CustomMobService mobs;
+    private MobSpawnService spawns;
+    private BossService bosses;
+    private BossBarService bossBars;
+    private ParticleService particles;
+    private ActionBarService actionbar;
+    private GuiManager guis;
+    private FloodgateHook floodgate;
+    private ThemeService theme;
+    private PlaceholderService placeholders;
+    private ScoreboardConfig scoreboardConfig;
+    private QuestScoreboardService questScoreboards;
+    private FileConfiguration messages;
+
+    public void onEnable() {
+        saveDefaultConfig();
+        saveResource("messages.yml", false);
+        theme = new ThemeService(this);
+        scoreboardConfig = new ScoreboardConfig(this);
+        loadMessages();
+        data = new PlayerDataManager(this);
+        drops = new DropService(this);
+        levels = new LevelService(this);
+        currency = new CurrencyService(this);
+        stats = new StatsService(this);
+        islands = new IslandService(this);
+        quests = new QuestService(this);
+        weapons = new WeaponService(this);
+        magic = new MagicItemService(this);
+        mobs = new CustomMobService(this);
+        bosses = new BossService(this);
+        bossBars = new BossBarService(this);
+        spawns = new MobSpawnService(this);
+        particles = new ParticleService(this);
+        actionbar = new ActionBarService(this);
+        placeholders = new PlaceholderService(this);
+        guis = new GuiManager(this);
+        questScoreboards = new QuestScoreboardService(this);
+        floodgate = new FloodgateHook();
+        reloadAll();
+        getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
+        getServer().getPluginManager().registerEvents(new CombatListener(this), this);
+        getServer().getPluginManager().registerEvents(new MobListener(this), this);
+        getServer().getPluginManager().registerEvents(new GuiListener(this), this);
+        getServer().getPluginManager().registerEvents(new QuestListener(), this);
+        new CommandManager(this);
+        actionbar.start();
+        particles.start();
+        spawns.start();
+        questScoreboards.start();
+        getLogger().info("Islands RPG enabled.");
+    }
+
+    public void onDisable() {
+        if (data != null) data.saveAll();
+        if (actionbar != null) actionbar.stop();
+        if (particles != null) particles.stop();
+        if (spawns != null) spawns.stop();
+        if (questScoreboards != null) questScoreboards.disable();
+        if (bossBars != null) bossBars.removeAll();
+    }
+
+    public void reloadAll() {
+        reloadConfig();
+        loadMessages();
+        theme.reload();
+        levels.reload();
+        islands.reload();
+        quests.reload();
+        weapons.reload();
+        magic.reload();
+        mobs.reload();
+        bosses.reload();
+        guis.reload();
+        if (actionbar != null) actionbar.start();
+        if (questScoreboards != null) questScoreboards.reload();
+    }
+
+    private void loadMessages() {
+        saveResource("messages.yml", false);
+        messages = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "messages.yml"));
+    }
+
+    public String message(String key) { return messages.getString(key, key); }
+    public boolean emojis() { return theme == null ? getConfig().getBoolean("visuals.emojis", true) : theme.emojisEnabled(); }
+    public NamespacedKey key(String key) { return new NamespacedKey(this, key); }
+    public PlayerDataManager data() { return data; }
+    public LevelService levels() { return levels; }
+    public CurrencyService currency() { return currency; }
+    public StatsService stats() { return stats; }
+    public IslandService islands() { return islands; }
+    public QuestService quests() { return quests; }
+    public DropService drops() { return drops; }
+    public WeaponService weapons() { return weapons; }
+    public MagicItemService magic() { return magic; }
+    public CustomMobService mobs() { return mobs; }
+    public MobSpawnService spawns() { return spawns; }
+    public BossService bosses() { return bosses; }
+    public BossBarService bossBars() { return bossBars; }
+    public ParticleService particles() { return particles; }
+    public ActionBarService actionbar() { return actionbar; }
+    public GuiManager guis() { return guis; }
+    public FloodgateHook floodgate() { return floodgate; }
+    public ThemeService theme() { return theme; }
+    public PlaceholderService placeholders() { return placeholders; }
+    public ScoreboardConfig scoreboardConfig() { return scoreboardConfig; }
+    public QuestScoreboardService questScoreboards() { return questScoreboards; }
+}

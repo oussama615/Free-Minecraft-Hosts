@@ -1,3 +1,90 @@
 package net.hivel.islandsrpg.quest;
-import net.hivel.islandsrpg.IslandsRPGPlugin; import net.hivel.islandsrpg.data.PlayerData; import net.hivel.islandsrpg.util.*; import org.bukkit.configuration.file.FileConfiguration; import org.bukkit.entity.Player; import java.util.*;
-public class QuestService { private final IslandsRPGPlugin plugin; private final Map<String,Quest> quests=new LinkedHashMap<>(); public QuestService(IslandsRPGPlugin p){plugin=p;} public void reload(){FileConfiguration c=ConfigUtil.load(plugin,"quests.yml"); quests.clear(); var sec=c.getConfigurationSection("quests"); if(sec==null)return; for(String id:sec.getKeys(false)){try{String p="quests."+id+"."; QuestType type=QuestType.valueOf(c.getString(p+"type","KILL")); quests.put(id,new Quest(id,c.getString(p+"display-name",id),c.getString(p+"island","starter"),type,c.getString(p+"target",""),c.getInt(p+"amount",1),c.getLong(p+"rewards.xp",0),c.getLong(p+"rewards.money",0),c.getLong(p+"rewards.fragments",0),c.getString(p+"next",null),c.getBoolean(p+"repeatable",false),c.getBoolean(p+"daily",false)));}catch(Exception e){plugin.getLogger().warning("Invalid quest "+id);}}} public Collection<Quest> all(){return quests.values();} public Quest get(String id){return quests.get(id);} public boolean start(Player p,String id){Quest q=get(id); if(q==null)return false; PlayerData d=plugin.data().get(p); if(d.activeQuests.containsKey(id))return true; if(d.completedQuests.contains(id)&&!q.repeatable())return false; d.activeQuests.put(id,new QuestProgress(id,0)); p.sendMessage(ColorUtil.color(plugin.message("quest-started"))); plugin.data().save(d); return true;} public void complete(Player p,String id){Quest q=get(id); if(q==null)return; PlayerData d=plugin.data().get(p); d.activeQuests.remove(id); if(!q.repeatable()) d.completedQuests.add(id); plugin.levels().addXp(p,q.xp()); plugin.currency().addMoney(p,q.money()); plugin.currency().addFragments(p,q.fragments()); p.sendMessage(ColorUtil.color(plugin.message("quest-complete"))); plugin.data().save(d);} private void progress(Player p,QuestType type,String target,int amount){PlayerData d=plugin.data().get(p); for(QuestProgress pr:new ArrayList<>(d.activeQuests.values())){Quest q=get(pr.questId()); if(q!=null&&q.type()==type&&(q.target().equalsIgnoreCase(target)||type==QuestType.REACH_LEVEL)){ if(type==QuestType.REACH_LEVEL) pr.setCurrent(amount); else pr.add(1); if(pr.current()>=q.amount()) complete(p,q.id()); }}} public void handleKill(Player p,String mob){progress(p,QuestType.KILL,mob,1);} public void handleBossKill(Player p,String boss){progress(p,QuestType.BOSS_KILL,boss,1);} public void handleReachLevel(Player p,int level){progress(p,QuestType.REACH_LEVEL,"",level);} public void handleVisitIsland(Player p,String island){progress(p,QuestType.VISIT_ISLAND,island,1);} }
+
+import net.hivel.islandsrpg.IslandsRPGPlugin;
+import net.hivel.islandsrpg.data.PlayerData;
+import net.hivel.islandsrpg.util.ColorUtil;
+import net.hivel.islandsrpg.util.ConfigUtil;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
+
+import java.util.*;
+
+public class QuestService {
+    private final IslandsRPGPlugin plugin;
+    private final Map<String, Quest> quests = new LinkedHashMap<>();
+
+    public QuestService(IslandsRPGPlugin plugin) { this.plugin = plugin; }
+
+    public void reload() {
+        FileConfiguration config = ConfigUtil.load(plugin, "quests.yml");
+        quests.clear();
+        var section = config.getConfigurationSection("quests");
+        if (section == null) return;
+        for (String id : section.getKeys(false)) {
+            try {
+                String path = "quests." + id + ".";
+                QuestType type = QuestType.valueOf(config.getString(path + "type", "KILL"));
+                quests.put(id, new Quest(id, config.getString(path + "display-name", id), config.getString(path + "island", "starter"), type, config.getString(path + "target", ""), config.getInt(path + "amount", 1), config.getLong(path + "rewards.xp", 0), config.getLong(path + "rewards.money", 0), config.getLong(path + "rewards.fragments", 0), config.getString(path + "next", null), config.getBoolean(path + "repeatable", false), config.getBoolean(path + "daily", false)));
+            } catch (Exception e) {
+                plugin.getLogger().warning("Invalid quest " + id + ": " + e.getMessage());
+            }
+        }
+    }
+
+    public Collection<Quest> all() { return quests.values(); }
+    public Quest get(String id) { return quests.get(id); }
+
+    public boolean start(Player player, String id) {
+        Quest quest = get(id);
+        if (quest == null) return false;
+        PlayerData data = plugin.data().get(player);
+        if (data.activeQuests.containsKey(id)) return true;
+        if (data.completedQuests.contains(id) && !quest.repeatable()) return false;
+        QuestProgress progress = new QuestProgress(id, 0);
+        data.activeQuests.put(id, progress);
+        player.sendMessage(plugin.placeholders().apply(player, plugin.message("quest-started"), null, quest, progress, "active", null, null));
+        plugin.data().save(data);
+        plugin.questScoreboards().onQuestStart(player, quest);
+        return true;
+    }
+
+    public void cancel(Player player, String id) {
+        PlayerData data = plugin.data().get(player);
+        if (data.activeQuests.remove(id) != null) {
+            plugin.data().save(data);
+            plugin.questScoreboards().onQuestCancel(player);
+        }
+    }
+
+    public void complete(Player player, String id) {
+        Quest quest = get(id);
+        if (quest == null) return;
+        PlayerData data = plugin.data().get(player);
+        data.activeQuests.remove(id);
+        if (!quest.repeatable()) data.completedQuests.add(id);
+        plugin.levels().addXp(player, quest.xp());
+        plugin.currency().addMoney(player, quest.money());
+        plugin.currency().addFragments(player, quest.fragments());
+        player.sendMessage(plugin.placeholders().apply(player, plugin.message("quest-complete"), null, quest, new QuestProgress(id, quest.amount()), "completed", null, null));
+        plugin.data().save(data);
+        plugin.questScoreboards().onQuestComplete(player, quest);
+    }
+
+    private void progress(Player player, QuestType type, String target, int amount) {
+        PlayerData data = plugin.data().get(player);
+        for (QuestProgress progress : new ArrayList<>(data.activeQuests.values())) {
+            Quest quest = get(progress.questId());
+            if (quest == null || quest.type() != type) continue;
+            if (!quest.target().equalsIgnoreCase(target) && type != QuestType.REACH_LEVEL) continue;
+            if (type == QuestType.REACH_LEVEL) progress.setCurrent(amount); else progress.add(1);
+            plugin.questScoreboards().onQuestProgress(player, quest, progress);
+            if (progress.current() >= quest.amount()) complete(player, quest.id());
+        }
+        plugin.data().save(data);
+    }
+
+    public void handleKill(Player player, String mob) { progress(player, QuestType.KILL, mob, 1); }
+    public void handleBossKill(Player player, String boss) { progress(player, QuestType.BOSS_KILL, boss, 1); }
+    public void handleReachLevel(Player player, int level) { progress(player, QuestType.REACH_LEVEL, "", level); }
+    public void handleVisitIsland(Player player, String island) { progress(player, QuestType.VISIT_ISLAND, island, 1); }
+}

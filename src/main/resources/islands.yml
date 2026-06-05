@@ -7,7 +7,7 @@ islands:
   mine:
     display-name: "&7ᴍɪɴᴇ ɪꜱʟᴀɴᴅ"
     required-level: 100
-    icon: STONE
+    icon: IRON_ORE
     spawn: "world,100,80,0,0,0"
   desert:
     display-name: "&6ᴅᴇꜱᴇʀᴛ ɪꜱʟᴀɴᴅ"
