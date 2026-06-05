@@ -1,0 +1,16 @@
+name: IslandsRPG
+version: 1.0.0
+main: net.hivel.islandsrpg.IslandsRPGPlugin
+api-version: '1.21'
+author: Hivel
+description: Islands RPG progression plugin for Paper 1.21.11.
+softdepend: [floodgate]
+commands:
+  islands:
+    description: Islands RPG command.
+    aliases: [irpg, rpg]
+    usage: /islands
+permissions:
+  islands.admin:
+    description: Allows IslandsRPG admin commands.
+    default: op

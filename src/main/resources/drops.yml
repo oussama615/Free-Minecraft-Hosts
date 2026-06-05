@@ -1,0 +1,14 @@
+drops:
+  rare_command_reward:
+    type: COMMAND
+    chance: 2.5
+    commands: ["islands fragments give %player% 5"]
+  money:
+    type: MONEY
+    chance: 100.0
+    min: 5
+    max: 10
+  crystal_blade_drop:
+    type: WEAPON
+    weapon-id: crystal_blade
+    chance: 1.5

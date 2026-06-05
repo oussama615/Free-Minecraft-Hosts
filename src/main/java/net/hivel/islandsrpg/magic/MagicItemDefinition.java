@@ -1,0 +1,3 @@
+package net.hivel.islandsrpg.magic;
+import net.hivel.islandsrpg.weapon.WeaponType; import org.bukkit.*; import java.util.*;
+public record MagicItemDefinition(String id, Material material, WeaponType type, String displayName, int requiredLevel, double damage, int cooldownSeconds, double magicScaling, boolean glow, List<String> lore, boolean heldEnabled, Particle heldParticle, int heldCount, int heldInterval, double heldRadius, boolean heldJavaOnly, boolean hitEnabled, Particle hitParticle, int hitCount, boolean hitJavaOnly, Sound hitSound, String effectType, int effectDurationSeconds, int effectAmplifier) {}

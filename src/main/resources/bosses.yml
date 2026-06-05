@@ -1,0 +1,21 @@
+bosses:
+  rotten_brute:
+    entity: ZOMBIE
+    display-name: "&2ʀᴏᴛᴛᴇɴ ʙʀᴜᴛᴇ"
+    island: starter
+    level: 50
+    health: 500
+    damage: 12
+    xp: 1500
+    money: 400
+    fragments: 15
+    show-health-name: true
+    bossbar:
+      enabled: true
+      color: GREEN
+      style: SEGMENTED_10
+      title: "&2ʀᴏᴛᴛᴇɴ ʙʀᴜᴛᴇ &8| &c%health%/%max_health%"
+      range: 40
+    drops:
+      brute_core: {type: ITEM, material: NETHER_STAR, display-name: "&6ʙʀᴜᴛᴇ ᴄᴏʀᴇ", chance: 10.0, min: 1, max: 1}
+      brute_fragments: {type: FRAGMENTS, chance: 100.0, min: 10, max: 20}

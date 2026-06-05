@@ -1,0 +1,3 @@
+package net.hivel.islandsrpg.stats;
+import org.bukkit.Material;
+public enum StatType { MELEE("melee","ᴍᴇʟᴇᴇ", Material.IRON_AXE), DEFENCE("defence","ᴅᴇꜰᴇɴᴄᴇ",Material.IRON_CHESTPLATE), SWORD("sword","ꜱᴡᴏʀᴅ",Material.IRON_SWORD), MAGIC("magic","ᴍᴀɢɪᴄ",Material.ENCHANTED_BOOK), LUCK("luck","ʟᴜᴄᴋ",Material.RABBIT_FOOT); public final String key, display; public final Material icon; StatType(String key,String display,Material icon){this.key=key;this.display=display;this.icon=icon;} public static StatType fromKey(String k){for(var t:values()) if(t.key.equalsIgnoreCase(k)||t.name().equalsIgnoreCase(k)) return t; return null;} }
