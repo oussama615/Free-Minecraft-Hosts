@@ -1,12 +1,3 @@
-#!/usr/bin/env python3
-"""IslandForge: generate themed Minecraft island schematics from an image mask and prompt.
-
-The tool can read/write PNG masks and previews with the Python standard
-library. Pillow is optional but recommended because it also enables JPG input
-and higher-quality image resizing. Schematic generation is self-contained NBT
-and gzip encoding.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -175,6 +166,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--height", type=int, default=24, help="Maximum terrain relief in blocks.")
     parser.add_argument("--detail", choices=sorted(DETAILS), default="balanced")
     parser.add_argument("--output", required=True, help="Output WorldEdit/FAWE .schem path.")
+    codex/build-islandforge-tool-for-minecraft-islands-71bkoo
+    parser.add_argument("--layout", choices=("island", "spawn_hub"), default="island", help="Generation layout. Use spawn_hub for a structured RPG starter spawn island.")
     parser.add_argument("--seed", type=int, default=None, help="Optional deterministic seed. Defaults to image/prompt-derived seed.")
     return parser.parse_args()
 
@@ -401,12 +394,20 @@ def choose_feature_spots(points: Sequence[Tuple[int, int, int]], features: Seque
     return spots
 
 
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
+def build_terrain(mask: List[List[bool]], theme: Dict[str, object], requested_height: int, seed: int, layout: str = "island") -> Tuple[Schematic, List[List[int]]]:
+=======
 def build_terrain(mask: List[List[bool]], theme: Dict[str, object], requested_height: int, seed: int) -> Tuple[Schematic, List[List[int]]]:
+main
     size = len(mask)
     dist = distance_to_edge(mask)
     max_dist = max((dist[z][x] for z in range(size) for x in range(size) if mask[z][x]), default=1)
-    heights = [[0 for _ in range(size)] for _ in range(size)]
+    heights = [[0 for _ in range(size)] for _ in range(size)
+    codex/build-islandforge-tool-for-minecraft-islands-71bkoo
+    world_height = max(16, requested_height + (44 if layout == "spawn_hub" else 24))
+=======
     world_height = max(16, requested_height + 24)
+    main
     schem = Schematic(size, world_height, size)
     for z in range(size):
         for x in range(size):
@@ -417,7 +418,39 @@ def build_terrain(mask: List[List[bool]], theme: Dict[str, object], requested_he
             thickness = int(4 + min(14, dist[z][x] * 0.55) + value_noise(x * 0.14, z * 0.14, seed + 7, 3) * 5)
             bottom = max(1, heights[z][x] - thickness)
             for y in range(bottom, heights[z][x] + 1):
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
+                if layout == "spawn_hub":
+                    surface_noise = value_noise(x * 0.09, z * 0.09, seed + 401, 3)
+                    deep_noise = value_noise(x * 0.16, z * 0.16, seed + 402, 2)
+                    if y == heights[z][x]:
+                        if dist[z][x] < 4 and surface_noise > 0.54:
+                            block = "minecraft:stone"
+                        elif surface_noise > 0.82:
+                            block = "minecraft:coarse_dirt"
+                        elif surface_noise > 0.68:
+                            block = "minecraft:rooted_dirt"
+                        elif surface_noise < 0.18:
+                            block = "minecraft:moss_block"
+                        else:
+                            block = str(theme["top"])
+                    elif y >= heights[z][x] - 3:
+                        if deep_noise > 0.78:
+                            block = "minecraft:gravel"
+                        elif deep_noise < 0.22:
+                            block = "minecraft:coarse_dirt"
+                        else:
+                            block = str(theme["filler"])
+                    else:
+                        if deep_noise > 0.72:
+                            block = "minecraft:andesite"
+                        elif deep_noise < 0.20:
+                            block = "minecraft:cobblestone"
+                        else:
+                            block = str(theme["base"])
+                elif y == heights[z][x]:
+=======
                 if y == heights[z][x]:
+main
                     block = str(theme["top"])
                 elif y >= heights[z][x] - 3:
                     block = str(theme["filler"])
@@ -615,6 +648,296 @@ def apply_features(schem: Schematic, heights: List[List[int]], mask: List[List[b
             schem.set(f.x, heights[f.z][f.x] + 1, f.z, str(theme["flower"]))
 
 
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
+SPAWN_PATH_BLOCK = "minecraft:stone_bricks"
+SPAWN_PATH_BORDER = "minecraft:cobblestone"
+SPAWN_PLAZA_BLOCK = "minecraft:polished_andesite"
+SPAWN_PLAZA_DETAIL = "minecraft:chiseled_stone_bricks"
+
+
+def point_meta(x: int, y: int, z: int, radius: int = 0) -> Dict[str, int]:
+    data = {"x": x, "y": y, "z": z}
+    if radius:
+        data["radius"] = radius
+    return data
+
+
+def nearest_land(points: Sequence[Tuple[int, int, int]], tx: float, tz: float) -> Tuple[int, int, int]:
+    if not points:
+        return (0, 0, 0)
+    return min(points, key=lambda p: (p[0] - tx) ** 2 + (p[2] - tz) ** 2)
+
+
+def edge_land(points: Sequence[Tuple[int, int, int]], size: int, prefer: Tuple[float, float]) -> Tuple[int, int, int]:
+    if not points:
+        return (0, 0, 0)
+    px, pz = prefer
+    return min(
+        points,
+        key=lambda p: min(p[0], p[2], size - 1 - p[0], size - 1 - p[2]) * 8 + (p[0] - px) ** 2 * 0.01 + (p[2] - pz) ** 2 * 0.01,
+    )
+
+
+def set_surface_disc(schem: Schematic, heights: List[List[int]], cx: int, cz: int, radius: int, block: str, border: str | None = None) -> int:
+    y = flatten_disc(schem, heights, cx, cz, radius, block)
+    if y <= 0:
+        return y
+    for z in range(max(0, cz - radius), min(schem.length, cz + radius + 1)):
+        for x in range(max(0, cx - radius), min(schem.width, cx + radius + 1)):
+            d2 = (x - cx) ** 2 + (z - cz) ** 2
+            if d2 <= radius ** 2 and heights[z][x] > 0:
+                if border and radius - 2 <= math.sqrt(d2) <= radius:
+                    schem.set(x, y, z, border)
+                elif (x + z) % 11 == 0:
+                    schem.set(x, y, z, SPAWN_PLAZA_DETAIL)
+    return y
+
+
+def raise_hill(schem: Schematic, heights: List[List[int]], cx: int, cz: int, radius: int, lift: int, theme: Dict[str, object]) -> int:
+    peak = 0
+    for z in range(max(0, cz - radius), min(schem.length, cz + radius + 1)):
+        for x in range(max(0, cx - radius), min(schem.width, cx + radius + 1)):
+            if heights[z][x] <= 0:
+                continue
+            d = math.sqrt((x - cx) ** 2 + (z - cz) ** 2)
+            if d > radius:
+                continue
+            add = int(round(lift * (1.0 - d / radius) ** 1.25))
+            if add <= 0:
+                continue
+            old = heights[z][x]
+            new = min(schem.height - 8, old + add)
+            for y in range(old + 1, new + 1):
+                if y == new:
+                    block = str(theme["top"])
+                elif y >= new - 3:
+                    block = "minecraft:coarse_dirt" if (x + y + z) % 3 == 0 else str(theme["filler"])
+                else:
+                    block = "minecraft:stone" if (x + z) % 2 == 0 else str(theme["base"])
+                schem.set(x, y, z, block)
+            heights[z][x] = new
+            peak = max(peak, new)
+    return peak
+
+
+def path_between(schem: Schematic, heights: List[List[int]], a: Tuple[int, int, int], b: Tuple[int, int, int], width: int = 2) -> None:
+    ax, _, az = a
+    bx, _, bz = b
+    steps = max(abs(ax - bx), abs(az - bz), 1)
+    for i in range(steps + 1):
+        t = i / steps
+        x = int(round(ax * (1 - t) + bx * t))
+        z = int(round(az * (1 - t) + bz * t))
+        for dz in range(-width - 1, width + 2):
+            for dx in range(-width - 1, width + 2):
+                nx, nz = x + dx, z + dz
+                if 0 <= nx < schem.width and 0 <= nz < schem.length and heights[nz][nx] > 0:
+                    if abs(dx) == width + 1 or abs(dz) == width + 1:
+                        schem.set(nx, heights[nz][nx], nz, SPAWN_PATH_BORDER)
+                    elif dx * dx + dz * dz <= (width + 0.75) ** 2:
+                        schem.set(nx, heights[nz][nx], nz, SPAWN_PATH_BLOCK if (nx + nz) % 5 else "minecraft:cracked_stone_bricks")
+
+
+def add_plaza(schem: Schematic, heights: List[List[int]], center: Tuple[int, int, int], radius: int, main: bool) -> Dict[str, int]:
+    x, _, z = center
+    y = set_surface_disc(schem, heights, x, z, radius, SPAWN_PLAZA_BLOCK, SPAWN_PATH_BORDER)
+    # Premium hub marker: fountain/notice monument for main, smaller waypoint for secondary.
+    for yy in range(y + 1, y + (5 if main else 3)):
+        schem.set(x, yy, z, "minecraft:chiseled_stone_bricks")
+    if main:
+        for dx, dz in ((2, 0), (-2, 0), (0, 2), (0, -2)):
+            schem.set(x + dx, y + 1, z + dz, "minecraft:water")
+            schem.set(x + dx, y, z + dz, "minecraft:quartz_block")
+        schem.set(x, y + 5, z, "minecraft:lantern[hanging=false]")
+    else:
+        schem.set(x, y + 3, z, "minecraft:bell")
+    return point_meta(x, y, z, radius)
+
+
+def add_medieval_building(schem: Schematic, heights: List[List[int]], cx: int, cz: int, width: int, depth: int, floors: int, theme: Dict[str, object]) -> Dict[str, int]:
+    half_w, half_d = width // 2, depth // 2
+    ys = [heights[z][x] for z in range(max(0, cz - half_d), min(schem.length, cz + half_d + 1)) for x in range(max(0, cx - half_w), min(schem.width, cx + half_w + 1)) if heights[z][x] > 0]
+    if not ys:
+        return point_meta(cx, 0, cz)
+    y = int(sum(ys) / len(ys))
+    for z in range(max(0, cz - half_d), min(schem.length, cz + half_d + 1)):
+        for x in range(max(0, cx - half_w), min(schem.width, cx + half_w + 1)):
+            if heights[z][x] > 0:
+                for yy in range(max(1, y - 2), y + 1):
+                    schem.set(x, yy, z, "minecraft:cobblestone")
+                heights[z][x] = y
+    wall_h = floors * 4
+    for yy in range(y + 1, y + wall_h + 1):
+        for z in range(cz - half_d, cz + half_d + 1):
+            for x in range(cx - half_w, cx + half_w + 1):
+                edge = x in (cx - half_w, cx + half_w) or z in (cz - half_d, cz + half_d)
+                corner = x in (cx - half_w, cx + half_w) and z in (cz - half_d, cz + half_d)
+                if corner:
+                    schem.set(x, yy, z, str(theme["wood"]))
+                elif edge:
+                    if yy % 4 == 3 and (x + z) % 4 == 0:
+                        schem.set(x, yy, z, "minecraft:glass_pane")
+                    else:
+                        schem.set(x, yy, z, "minecraft:oak_planks" if yy % 2 else "minecraft:stripped_oak_log")
+    roof_y = y + wall_h + 1
+    for layer in range(half_w + 2):
+        for z in range(cz - half_d - 1, cz + half_d + 2):
+            for x in (cx - half_w - 1 + layer, cx + half_w + 1 - layer):
+                schem.set(x, roof_y + layer, z, "minecraft:dark_oak_planks")
+    schem.set(cx, y + 1, cz - half_d, "minecraft:oak_door[facing=north,half=lower]")
+    schem.set(cx, y + 2, cz - half_d, "minecraft:oak_door[facing=north,half=upper]")
+    return point_meta(cx, y, cz, max(width, depth) // 2)
+
+
+def add_spawn_buildings(schem: Schematic, heights: List[List[int]], main: Tuple[int, int, int], points: Sequence[Tuple[int, int, int]], radius: int, theme: Dict[str, object], rng: random.Random) -> List[Dict[str, int]]:
+    buildings: List[Dict[str, int]] = []
+    for angle in range(20, 360, 45):
+        tx = main[0] + math.cos(math.radians(angle)) * (radius + 11)
+        tz = main[2] + math.sin(math.radians(angle)) * (radius + 11)
+        x, _, z = nearest_land(points, tx, tz)
+        width = rng.choice((7, 9, 9, 11))
+        depth = rng.choice((7, 9, 11))
+        floors = rng.choice((1, 2, 2))
+        buildings.append(add_medieval_building(schem, heights, x, z, width, depth, floors, theme))
+    return buildings
+
+
+def add_windmill(schem: Schematic, heights: List[List[int]], center: Tuple[int, int, int], theme: Dict[str, object]) -> Dict[str, int]:
+    x, _, z = center
+    raise_hill(schem, heights, x, z, 13, 7, theme)
+    y = set_surface_disc(schem, heights, x, z, 5, "minecraft:coarse_dirt", "minecraft:mossy_cobblestone")
+    for yy in range(y + 1, y + 13):
+        for dx in range(-2, 3):
+            for dz in range(-2, 3):
+                if abs(dx) == 2 or abs(dz) == 2:
+                    schem.set(x + dx, yy, z + dz, "minecraft:stripped_spruce_log" if yy % 4 == 0 else "minecraft:white_wool")
+    for layer in range(4):
+        for dx in range(-4 + layer, 5 - layer):
+            schem.set(x + dx, y + 13 + layer, z - 3, "minecraft:spruce_planks")
+            schem.set(x + dx, y + 13 + layer, z + 3, "minecraft:spruce_planks")
+    hub_y = y + 9
+    schem.set(x, hub_y, z - 3, "minecraft:oak_log")
+    for i in range(1, 7):
+        schem.set(x, hub_y + i, z - 4, "minecraft:oak_fence")
+        schem.set(x, hub_y - i, z - 4, "minecraft:oak_fence")
+        schem.set(x + i, hub_y, z - 4, "minecraft:oak_fence")
+        schem.set(x - i, hub_y, z - 4, "minecraft:oak_fence")
+    return point_meta(x, y, z, 13)
+
+
+def add_dock_area(schem: Schematic, heights: List[List[int]], dock: Tuple[int, int, int], theme: Dict[str, object]) -> Dict[str, int]:
+    x, y, z = dock
+    y = set_surface_disc(schem, heights, x, z, 6, "minecraft:smooth_stone", "minecraft:oak_planks") or y
+    # Extend a broad travel pier outward from the nearest island edge.
+    dx = -1 if x < schem.width / 2 else 1
+    dz = -1 if z < schem.length / 2 else 1
+    if min(x, schem.width - 1 - x) < min(z, schem.length - 1 - z):
+        dz = 0
+    else:
+        dx = 0
+    for i in range(16):
+        px, pz = x + dx * i, z + dz * i
+        for side in range(-2, 3):
+            schem.set(px + (side if dz else 0), y, pz + (side if dx else 0), "minecraft:spruce_planks")
+        if i % 4 == 0:
+            schem.set(px, y + 1, pz, "minecraft:lantern[hanging=false]")
+    schem.set(x, y + 1, z, "minecraft:bell")
+    return point_meta(x, y, z, 6)
+
+
+def add_boss_arena(schem: Schematic, heights: List[List[int]], center: Tuple[int, int, int], theme: Dict[str, object]) -> Dict[str, int]:
+    x, _, z = center
+    raise_hill(schem, heights, x, z, 16, 8, theme)
+    y = set_surface_disc(schem, heights, x, z, 10, "minecraft:deepslate_tiles", "minecraft:red_nether_bricks")
+    for angle in range(0, 360, 30):
+        px = x + int(math.cos(math.radians(angle)) * 10)
+        pz = z + int(math.sin(math.radians(angle)) * 10)
+        for yy in range(y + 1, y + 6):
+            schem.set(px, yy, pz, "minecraft:polished_blackstone_bricks")
+        schem.set(px, y + 6, pz, "minecraft:soul_lantern[hanging=false]")
+    schem.set(x, y + 1, z, "minecraft:beacon")
+    return point_meta(x, y, z, 10)
+
+
+def add_npc_spots(schem: Schematic, heights: List[List[int]], main: Tuple[int, int, int], secondary: Tuple[int, int, int], points: Sequence[Tuple[int, int, int]], main_radius: int, secondary_radius: int) -> List[Dict[str, int]]:
+    targets: List[Tuple[float, float]] = []
+    for angle in range(0, 360, 45):
+        targets.append((main[0] + math.cos(math.radians(angle)) * (main_radius + 4), main[2] + math.sin(math.radians(angle)) * (main_radius + 4)))
+    for angle in (45, 135, 225, 315):
+        targets.append((secondary[0] + math.cos(math.radians(angle)) * (secondary_radius + 3), secondary[2] + math.sin(math.radians(angle)) * (secondary_radius + 3)))
+    spots: List[Dict[str, int]] = []
+    used: set[Tuple[int, int]] = set()
+    for tx, tz in targets[:12]:
+        x, _, z = nearest_land(points, tx, tz)
+        if (x, z) in used:
+            x, _, z = nearest_land(points, tx + 3, tz + 3)
+        used.add((x, z))
+        y = heights[z][x]
+        for dx in range(-1, 2):
+            for dz in range(-1, 2):
+                if 0 <= x + dx < schem.width and 0 <= z + dz < schem.length and heights[z + dz][x + dx] > 0:
+                    schem.set(x + dx, heights[z + dz][x + dx], z + dz, "minecraft:smooth_stone")
+        schem.set(x, y + 1, z, "minecraft:barrel")
+        schem.set(x, y + 2, z, "minecraft:lantern[hanging=false]")
+        spots.append(point_meta(x, y, z, 1))
+    return spots
+
+
+def apply_spawn_hub_layout(schem: Schematic, heights: List[List[int]], mask: List[List[bool]], theme: Dict[str, object], prompt: str, rng: random.Random) -> Dict[str, object]:
+    points = land_points(mask, heights)
+    # Prompt flavor is applied first; fixed hub structures are stamped afterward
+    # so plaza/path readability always wins over decorative noise.
+    hub_prompt_features = prompt_features(prompt + " trees statues ruins paths", "starter")
+    flavor = [name for name in hub_prompt_features if name in {"trees", "statues", "ruins", "caves"}]
+    flavor_features = choose_feature_spots(points, flavor, "balanced", rng)
+    apply_features(schem, heights, mask, flavor_features, theme, rng)
+
+    size = schem.width
+    main = nearest_land(points, size * 0.50, size * 0.50)
+    secondary = nearest_land(points, size * 0.30, size * 0.68)
+    windmill = nearest_land(points, size * 0.72, size * 0.28)
+    boss = nearest_land(points, size * 0.75, size * 0.72)
+    dock = edge_land(points, size, (size * 0.50, size * 0.95))
+
+    main_radius = max(10, size // 11)
+    secondary_radius = max(7, size // 16)
+    main_meta = add_plaza(schem, heights, main, main_radius, True)
+    secondary_meta = add_plaza(schem, heights, secondary, secondary_radius, False)
+    windmill_meta = add_windmill(schem, heights, windmill, theme)
+    boss_meta = add_boss_arena(schem, heights, boss, theme)
+    dock_meta = add_dock_area(schem, heights, dock, theme)
+
+    anchors = [
+        (main_meta["x"], main_meta["y"], main_meta["z"]),
+        (secondary_meta["x"], secondary_meta["y"], secondary_meta["z"]),
+        (windmill_meta["x"], windmill_meta["y"], windmill_meta["z"]),
+        (boss_meta["x"], boss_meta["y"], boss_meta["z"]),
+        (dock_meta["x"], dock_meta["y"], dock_meta["z"]),
+    ]
+    for anchor in anchors[1:]:
+        path_between(schem, heights, anchors[0], anchor, width=2)
+    path_between(schem, heights, anchors[1], anchors[4], width=2)
+
+    buildings = add_spawn_buildings(schem, heights, anchors[0], points, main_radius, theme, rng)
+    npc_spots = add_npc_spots(schem, heights, anchors[0], anchors[1], points, main_radius, secondary_radius)
+    for npc in npc_spots:
+        path_between(schem, heights, anchors[0], (npc["x"], npc["y"], npc["z"]), width=1)
+
+    return {
+        "main_plaza": main_meta,
+        "secondary_plaza": secondary_meta,
+        "npc_spots": npc_spots,
+        "boss_arena": boss_meta,
+        "dock_area": dock_meta,
+        "windmill_area": windmill_meta,
+        "buildings": buildings,
+        "hub_paths": [point_meta(*anchor) for anchor in anchors],
+        "style_notes": "Prompt details are layered onto a fixed premium RPG starter spawn hub layout.",
+    }
+
+
+=======
+main
 def write_varints(ids: Iterable[int]) -> bytes:
     out = bytearray()
     for value in ids:
@@ -708,7 +1031,11 @@ def write_preview(path: str, mask: List[List[bool]], heights: List[List[int]], f
             if mask[z][x] and heights[z][x] > 0:
                 shade = 0.62 + 0.45 * heights[z][x] / max_h
                 pixels[z * size + x] = tuple(min(255, int(c * shade)) for c in base)
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
+    colors = {"tree": (35, 105, 38), "ruins": (170, 170, 150), "temples": (230, 205, 120), "caves": (10, 10, 12), "docks": (130, 83, 45), "boss_area": (220, 35, 35), "mob_area": (150, 45, 180), "towers": (210, 210, 210), "statues": (115, 180, 180), "decor": (245, 215, 90), "main_plaza": (235, 235, 210), "secondary_plaza": (190, 190, 180), "npc_spot": (80, 220, 255), "boss_arena": (230, 40, 40), "dock_area": (155, 95, 45), "windmill_area": (240, 240, 160)}
+=======
     colors = {"tree": (35, 105, 38), "ruins": (170, 170, 150), "temples": (230, 205, 120), "caves": (10, 10, 12), "docks": (130, 83, 45), "boss_area": (220, 35, 35), "mob_area": (150, 45, 180), "towers": (210, 210, 210), "statues": (115, 180, 180), "decor": (245, 215, 90)}
+main
     for f in features:
         r = max(1, min(5, f.radius // 2))
         color = colors.get(f.kind, (255, 255, 255))
@@ -737,10 +1064,17 @@ def write_preview(path: str, mask: List[List[bool]], heights: List[List[int]], f
             write_rgb_png(path, size, size, pixels)
 
 
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
+def island_seed(image_path: str, prompt: str, theme: str, layout: str, explicit: int | None) -> int:
+    if explicit is not None:
+        return explicit
+    payload = f"{Path(image_path).name}|{prompt}|{theme}|{layout}"
+=======
 def island_seed(image_path: str, prompt: str, theme: str, explicit: int | None) -> int:
     if explicit is not None:
         return explicit
     payload = f"{Path(image_path).name}|{prompt}|{theme}"
+main
     seed = 0x811C9DC5
     for b in payload.encode("utf-8"):
         seed ^= b
@@ -760,16 +1094,41 @@ def validate_args(args: argparse.Namespace) -> None:
 def main() -> int:
     args = parse_args()
     validate_args(args)
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
+    seed = island_seed(args.image, args.prompt, args.theme, args.layout, args.seed)
+=======
     seed = island_seed(args.image, args.prompt, args.theme, args.seed)
+main
     rng = random.Random(seed)
     detail = DETAILS[args.detail]
     mask = smooth_mask(load_mask(args.image, args.size), int(detail["passes"]))
     theme = THEMES[args.theme]
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
+    schem, heights = build_terrain(mask, theme, args.height, seed, args.layout)
+    points = land_points(mask, heights)
+    feature_names = prompt_features(args.prompt, args.theme)
+    layout_metadata: Dict[str, object] = {}
+    if args.layout == "spawn_hub":
+        layout_metadata = apply_spawn_hub_layout(schem, heights, mask, theme, args.prompt, rng)
+        features = [
+            Feature("main_plaza", int(layout_metadata["main_plaza"]["x"]), int(layout_metadata["main_plaza"]["y"]), int(layout_metadata["main_plaza"]["z"]), int(layout_metadata["main_plaza"]["radius"])),
+            Feature("secondary_plaza", int(layout_metadata["secondary_plaza"]["x"]), int(layout_metadata["secondary_plaza"]["y"]), int(layout_metadata["secondary_plaza"]["z"]), int(layout_metadata["secondary_plaza"]["radius"])),
+            Feature("boss_arena", int(layout_metadata["boss_arena"]["x"]), int(layout_metadata["boss_arena"]["y"]), int(layout_metadata["boss_arena"]["z"]), int(layout_metadata["boss_arena"]["radius"])),
+            Feature("dock_area", int(layout_metadata["dock_area"]["x"]), int(layout_metadata["dock_area"]["y"]), int(layout_metadata["dock_area"]["z"]), int(layout_metadata["dock_area"]["radius"])),
+            Feature("windmill_area", int(layout_metadata["windmill_area"]["x"]), int(layout_metadata["windmill_area"]["y"]), int(layout_metadata["windmill_area"]["z"]), int(layout_metadata["windmill_area"]["radius"])),
+        ]
+        for spot in layout_metadata["npc_spots"]:
+            features.append(Feature("npc_spot", int(spot["x"]), int(spot["y"]), int(spot["z"]), int(spot["radius"])))
+    else:
+        features = choose_feature_spots(points, feature_names, args.detail, rng)
+        apply_features(schem, heights, mask, features, theme, rng)
+=======
     schem, heights = build_terrain(mask, theme, args.height, seed)
     points = land_points(mask, heights)
     feature_names = prompt_features(args.prompt, args.theme)
     features = choose_feature_spots(points, feature_names, args.detail, rng)
     apply_features(schem, heights, mask, features, theme, rng)
+main
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -783,11 +1142,19 @@ def main() -> int:
         "size": args.size,
         "height": args.height,
         "detail": args.detail,
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
+        "layout": args.layout,
+=======
+main
         "seed": seed,
         "schematic": os.path.abspath(output),
         "preview": os.path.abspath(preview),
         "features_requested": feature_names,
         "features_placed": [f.__dict__ for f in features],
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
+        **layout_metadata,
+=======
+main
         "palette": sorted(schem.palette),
         "format": "Sponge schematic v2 (.schem), gzip-compressed NBT",
     }

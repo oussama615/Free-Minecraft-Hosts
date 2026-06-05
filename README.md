@@ -1,4 +1,4 @@
-@@ -180,68 +180,65 @@ Plugin commands:
+Plugin commands:
  - `/empcontrol unlink`
  - `/empcontrol reload`
  - `/empcontrol testalert`
@@ -115,9 +115,6 @@
  - WebSocket envelopes include `serverId`, `timestamp`, `nonce`, `payload`, and `signature`; stale timestamps and nonce replays are rejected.
  - Remote console is OWNER-only, policy-checked, audited, signed by the backend, and dispatched only through Bukkit's console sender.
  - No file manager, plugin upload, shell command execution, server-file exposure, arbitrary class loading, or file browsing is implemented.
- 
-EOF
-)
 
 ## IslandForge local island generator
 
@@ -145,6 +142,9 @@ IslandForge writes three files next to the output path:
 
 - `*.schem` — Sponge/WorldEdit v2 schematic containing generated terrain and features.
 - `*.preview.png` — top-down color preview with feature markers.
+
+- `*.metadata.json` — generation settings, seed, palette, placed feature coordinates, and layout-specific zone coordinates.
+=======
 - `*.metadata.json` — generation settings, seed, palette, and placed feature coordinates.
 
 ### Inputs and options
@@ -156,8 +156,26 @@ IslandForge writes three files next to the output path:
 - `--height`: maximum terrain relief, from 6 to 128.
 - `--detail`: `simple`, `balanced`, `detailed`, or `epic`.
 - `--output`: destination `.schem` path.
+- `--layout`: `island` for prompt-led decorative islands, or `spawn_hub` for a structured premium RPG starter spawn island.
 - `--seed`: optional deterministic seed for repeatable generation.
 
+### Spawn hub layout
+
+Use `--layout spawn_hub` when the island should be a readable RPG starter spawn instead of a generic decorative island. This mode always stamps a large central plaza, secondary plaza, roughly 12 NPC/bot pads, clean stone roads, medieval buildings, a raised windmill hill, an edge dock/travel area, and an elevated boss/combat arena. The prompt still controls mood and decorative flavor, but the hub structure remains fixed and clear. Metadata includes `main_plaza`, `secondary_plaza`, `npc_spots`, `boss_arena`, `dock_area`, and `windmill_area` entries for downstream server/plugin setup.
+
+```bash
+python islandforge.py masks/spawn.png \
+  --layout spawn_hub \
+  --theme starter \
+  --prompt "Premium medieval RPG starter spawn with quest NPCs, cozy market buildings, warm lanterns, forest details, and a heroic boss portal." \
+  --size 180 \
+  --height 32 \
+  --detail epic \
+  --output rpg_spawn_hub.schem
+```
+
+=======
+- `--seed`: optional deterministic seed for repeatable generation.
 ### Theme examples
 
 ```bash
