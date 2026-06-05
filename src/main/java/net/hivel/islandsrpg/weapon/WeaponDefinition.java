@@ -1,0 +1,3 @@
+package net.hivel.islandsrpg.weapon;
+import java.util.*; import org.bukkit.*;
+public record WeaponDefinition(String id, Material material, WeaponType type, String displayName, Rarity rarity, int requiredLevel, double damage, double meleeScaling, double swordScaling, double magicScaling, boolean glow, boolean unbreakable, List<String> lore, boolean heldEnabled, Particle heldParticle, int heldCount, int heldInterval, double heldRadius, boolean heldJavaOnly, boolean hitEnabled, Particle hitParticle, int hitCount, boolean hitJavaOnly, Sound hitSound, String passiveType, double passiveChance, double passiveAmount, double passiveMagicScaling) {}

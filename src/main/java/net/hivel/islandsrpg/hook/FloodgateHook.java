@@ -1,0 +1,3 @@
+package net.hivel.islandsrpg.hook;
+import org.bukkit.Bukkit; import org.bukkit.entity.Player; import java.lang.reflect.Method;
+public class FloodgateHook { private Object api; private Method isFloodgatePlayer; public FloodgateHook(){try{if(Bukkit.getPluginManager().getPlugin("floodgate")!=null){Class<?> c=Class.forName("org.geysermc.floodgate.api.FloodgateApi"); api=c.getMethod("getInstance").invoke(null); isFloodgatePlayer=c.getMethod("isFloodgatePlayer",java.util.UUID.class);}}catch(Exception ignored){api=null;}} public boolean isBedrock(Player p){try{return api!=null && (boolean)isFloodgatePlayer.invoke(api,p.getUniqueId());}catch(Exception e){return false;}} }

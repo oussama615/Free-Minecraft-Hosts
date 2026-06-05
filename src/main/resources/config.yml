@@ -1,0 +1,38 @@
+prefix: "&6ɪꜱʟᴀɴᴅꜱ&7:"
+visuals:
+  java-particles: true
+  bedrock-particles: false
+  emojis: true
+  max-held-particle-items-per-tick: 50
+leveling:
+  max-level: 1000
+  stat-points-per-level: 3
+  base-xp: 100
+  linear-xp: 35
+  curve-xp: 0.12
+  sound:
+    enabled: true
+    name: ENTITY_PLAYER_LEVELUP
+  title:
+    enabled: true
+    title: "&6ʟᴇᴠᴇʟ ᴜᴘ"
+    subtitle: "&7ʏᴏᴜ reached level &f%level%&7."
+actionbar:
+  enabled: true
+  interval-ticks: 40
+  format: "&6⭐ ʟᴠʟ &f%level% &8| &6✦ xᴘ &f%xp%/%required_xp% &8| &6$ &f%money% &8| &6◆ ꜰʀᴀɢꜱ &f%fragments%"
+  format-no-emojis: "&6ʟᴠʟ &f%level% &8| &6xᴘ &f%xp%/%required_xp% &8| &6ᴍᴏɴᴇʏ &f%money% &8| &6ꜰʀᴀɢꜱ &f%fragments%"
+stats:
+  melee:
+    damage-per-point: 0.025
+  sword:
+    damage-per-point: 0.03
+  defence:
+    reduction-per-point: 0.00015
+    max-reduction: 0.50
+  magic:
+    power-per-point: 0.0004
+    max-bonus: 0.75
+  luck:
+    relative-drop-bonus-per-100-points: 0.02
+    max-relative-drop-bonus: 0.50

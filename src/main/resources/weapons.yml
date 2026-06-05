@@ -1,0 +1,31 @@
+weapons:
+  rusty_sword:
+    material: WOODEN_SWORD
+    type: SWORD
+    display-name: "&7ʀᴜꜱᴛʏ ꜱᴡᴏʀᴅ"
+    rarity: COMMON
+    required-level: 1
+    damage: 6
+    glow: false
+    unbreakable: true
+    lore: ["&7ᴅᴀᴍᴀɢᴇ: &f+6", "&7ʟᴇᴠᴇʟ: &f1"]
+    particles:
+      held: {enabled: false}
+      hit: {enabled: false}
+  crystal_blade:
+    material: IRON_SWORD
+    type: SWORD
+    display-name: "&bᴄʀʏꜱᴛᴀʟ ʙʟᴀᴅᴇ"
+    rarity: RARE
+    required-level: 100
+    damage: 24
+    sword-scaling: 0.03
+    magic-scaling: 0.02
+    glow: true
+    unbreakable: true
+    lore: ["&7ᴅᴀᴍᴀɢᴇ: &f+24", "&7ʟᴇᴠᴇʟ: &f100", "&7ᴘᴀꜱꜱɪᴠᴇ: &fᴄʀʏꜱᴛᴀʟ ꜱᴛʀɪᴋᴇ"]
+    particles:
+      held: {enabled: true, particle: END_ROD, count: 8, interval-ticks: 10, radius: 0.7, java-only: true}
+      hit: {enabled: true, particle: CRIT, count: 18, java-only: true}
+    sound: {hit: BLOCK_AMETHYST_BLOCK_CHIME}
+    passive: {type: BONUS_MAGIC_DAMAGE, chance: 12.0, amount: 5, magic-scaling: 0.02}
