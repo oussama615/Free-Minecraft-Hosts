@@ -1,0 +1,36 @@
+islands:
+  starter:
+    display-name: "&aꜱᴛᴀʀᴛᴇʀ ɪꜱʟᴀɴᴅ"
+    required-level: 1
+    icon: GRASS_BLOCK
+    spawn: "world,0,80,0,0,0"
+  mine:
+    display-name: "&7ᴍɪɴᴇ ɪꜱʟᴀɴᴅ"
+    required-level: 100
+    icon: STONE
+    spawn: "world,100,80,0,0,0"
+  desert:
+    display-name: "&6ᴅᴇꜱᴇʀᴛ ɪꜱʟᴀɴᴅ"
+    required-level: 200
+    icon: SAND
+    spawn: "world,200,80,0,0,0"
+  jungle:
+    display-name: "&2ᴊᴜɴɢʟᴇ ɪꜱʟᴀɴᴅ"
+    required-level: 350
+    icon: JUNGLE_SAPLING
+    spawn: "world,300,80,0,0,0"
+  frost:
+    display-name: "&bꜰʀᴏꜱᴛ ɪꜱʟᴀɴᴅ"
+    required-level: 500
+    icon: BLUE_ICE
+    spawn: "world,400,80,0,0,0"
+  arena:
+    display-name: "&cᴀʀᴇɴᴀ ɪꜱʟᴀɴᴅ"
+    required-level: 650
+    icon: NETHERITE_SWORD
+    spawn: "world,500,80,0,0,0"
+  ancient:
+    display-name: "&5ᴀɴᴄɪᴇɴᴛ ɪꜱʟᴀɴᴅ"
+    required-level: 800
+    icon: END_STONE_BRICKS
+    spawn: "world,600,80,0,0,0"
