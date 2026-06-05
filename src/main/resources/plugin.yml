@@ -7,10 +7,49 @@ description: Islands RPG progression plugin for Paper 1.21.11.
 softdepend: [floodgate]
 commands:
   islands:
-    description: Islands RPG command.
+    description: Open the Islands RPG main menu and admin command root.
     aliases: [irpg, rpg]
     usage: /islands
+    permission: islands.command.menu
+  stats:
+    description: Open the Islands RPG stats menu.
+    usage: /stats
+    permission: islands.command.stats
+  quests:
+    description: Open the Islands RPG quests menu.
+    usage: /quests
+    permission: islands.command.quests
+  profile:
+    description: Open your Islands RPG profile.
+    usage: /profile
+    permission: islands.command.profile
+  weapons:
+    description: Open the Islands RPG weapons menu.
+    usage: /weapons
+    permission: islands.command.weapons
+  isles:
+    description: Open the Islands RPG travel menu.
+    usage: /isles
+    permission: islands.command.isles
 permissions:
+  islands.command.menu:
+    description: Allows opening the Islands RPG main menu.
+    default: true
+  islands.command.stats:
+    description: Allows opening the stats menu.
+    default: true
+  islands.command.quests:
+    description: Allows opening the quests menu.
+    default: true
+  islands.command.profile:
+    description: Allows opening the profile menu.
+    default: true
+  islands.command.weapons:
+    description: Allows opening the weapons menu.
+    default: true
+  islands.command.isles:
+    description: Allows opening the islands travel menu.
+    default: true
   islands.admin:
     description: Allows IslandsRPG admin commands.
     default: op

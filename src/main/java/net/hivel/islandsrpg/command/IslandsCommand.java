@@ -1,3 +1,135 @@
 package net.hivel.islandsrpg.command;
-import net.hivel.islandsrpg.IslandsRPGPlugin; import net.hivel.islandsrpg.util.ColorUtil; import org.bukkit.*; import org.bukkit.command.*; import org.bukkit.entity.*; import org.bukkit.inventory.ItemStack; import java.util.*;
-public class IslandsCommand implements CommandExecutor, TabCompleter { private final IslandsRPGPlugin p; public IslandsCommand(IslandsRPGPlugin p){this.p=p;} public boolean onCommand(CommandSender s, Command c, String l, String[] a){try{ if(a.length==0){if(s instanceof Player pl)p.guis().openMain(pl); else help(s); return true;} String sub=a[0].toLowerCase(); if(s instanceof Player pl){switch(sub){case "stats"->p.guis().stats.open(pl); case "profile"->p.guis().profile.open(pl); case "quests"->p.guis().quests.open(pl); case "islands"->p.guis().islands.open(pl); case "weapons"->p.guis().weapons.open(pl); case "help"->help(s); default -> {if(!admin(s))return true; admin(s,sub,a);} } } else {if(!admin(s))return true; admin(s,sub,a);} }catch(Exception e){s.sendMessage(ColorUtil.color("&cᴇʀʀᴏʀ&7: "+e.getMessage()));} return true;} private boolean admin(CommandSender s){if(!s.hasPermission("islands.admin")){s.sendMessage(ColorUtil.color("&cᴇʀʀᴏʀ&7: no permission.")); return false;} return true;} private void admin(CommandSender s,String sub,String[] a){ switch(sub){case "reload"->{p.reloadAll(); s.sendMessage(ColorUtil.color(p.message("reloaded")));} case "addxp"->{Player t=player(s,a,1); if(t!=null&&num(a,2))p.levels().addXp(t,Long.parseLong(a[2]));} case "setlevel"->{Player t=player(s,a,1); if(t!=null&&num(a,2))p.levels().setLevel(t,Integer.parseInt(a[2]));} case "money"->{Player t=player(s,a,2); if(t!=null&&a.length>3&&num(a,3)){if("give".equalsIgnoreCase(a[1]))p.currency().addMoney(t,Long.parseLong(a[3])); else if("set".equalsIgnoreCase(a[1]))p.currency().setMoney(t,Long.parseLong(a[3]));}} case "fragments"->{Player t=player(s,a,2); if(t!=null&&a.length>3&&num(a,3)){if("give".equalsIgnoreCase(a[1]))p.currency().addFragments(t,Long.parseLong(a[3])); else if("set".equalsIgnoreCase(a[1]))p.currency().setFragments(t,Long.parseLong(a[3]));}} case "points"->{Player t=player(s,a,2); if(t!=null&&a.length>3&&"give".equalsIgnoreCase(a[1])&&num(a,3)){var d=p.data().get(t); d.statPoints+=Integer.parseInt(a[3]); p.data().save(d);}} case "giveweapon"->{Player t=player(s,a,1); if(t!=null&&a.length>2){ItemStack it=p.weapons().item(a[2]); if(it!=null)t.getInventory().addItem(it);}} case "givemagic"->{Player t=player(s,a,1); if(t!=null&&a.length>2){ItemStack it=p.magic().item(a[2]); if(it!=null)t.getInventory().addItem(it);}} case "spawnmob"->{if(s instanceof Player pl&&a.length>1)p.mobs().spawn(a[1],pl.getLocation());} case "spawnboss"->{if(s instanceof Player pl&&a.length>1)p.bosses().spawn(a[1],pl.getLocation());} case "setislandspawn"->{if(s instanceof Player pl&&a.length>1)p.islands().setSpawn(a[1],pl.getLocation());} case "startquest"->{Player t=player(s,a,1); if(t!=null&&a.length>2)p.quests().start(t,a[2]);} case "completequest"->{Player t=player(s,a,1); if(t!=null&&a.length>2)p.quests().complete(t,a[2]);} default -> help(s);} } private Player player(CommandSender s,String[] a,int idx){if(a.length<=idx){s.sendMessage("usage: missing player"); return null;} Player p=Bukkit.getPlayerExact(a[idx]); if(p==null)s.sendMessage(ColorUtil.color("&cᴇʀʀᴏʀ&7: player not found.")); return p;} private boolean num(String[] a,int idx){if(a.length<=idx)return false; try{Long.parseLong(a[idx]); return true;}catch(Exception e){return false;}} private void help(CommandSender s){s.sendMessage(ColorUtil.color("&6ɪꜱʟᴀɴᴅꜱ&7: /islands stats, profile, quests, islands, weapons")); if(s.hasPermission("islands.admin"))s.sendMessage(ColorUtil.color("&7Admin: reload, addxp, setlevel, money, fragments, points, giveweapon, givemagic, spawnmob, spawnboss, setislandspawn, startquest, completequest"));} public List<String> onTabComplete(CommandSender s, Command c, String l, String[] a){List<String> base=new ArrayList<>(List.of("stats","profile","quests","islands","weapons","help")); if(s.hasPermission("islands.admin"))base.addAll(List.of("reload","addxp","setlevel","money","fragments","points","giveweapon","givemagic","spawnmob","spawnboss","setislandspawn","startquest","completequest")); if(a.length==1)return base.stream().filter(x->x.startsWith(a[0].toLowerCase())).toList(); if(a.length==2&&List.of("addxp","setlevel","giveweapon","givemagic","startquest","completequest").contains(a[0].toLowerCase()))return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList(); if(a.length==3&&"giveweapon".equalsIgnoreCase(a[0]))return p.weapons().all().stream().map(x->x.id()).toList(); if(a.length==3&&"givemagic".equalsIgnoreCase(a[0]))return p.magic().all().stream().map(x->x.id()).toList(); if(a.length==2&&"spawnmob".equalsIgnoreCase(a[0]))return p.mobs().all().stream().map(x->x.id()).toList(); if(a.length==2&&"spawnboss".equalsIgnoreCase(a[0]))return p.bosses().all().stream().map(x->x.id()).toList(); if(a.length==2&&"setislandspawn".equalsIgnoreCase(a[0]))return p.islands().all().stream().map(x->x.id()).toList(); if(a.length==3&&List.of("startquest","completequest").contains(a[0].toLowerCase()))return p.quests().all().stream().map(x->x.id()).toList(); if(a.length==2&&List.of("money","fragments","points").contains(a[0].toLowerCase()))return List.of("give","set"); if(a.length==3&&List.of("money","fragments","points").contains(a[0].toLowerCase()))return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList(); return List.of();} }
+
+import net.hivel.islandsrpg.IslandsRPGPlugin;
+import net.hivel.islandsrpg.util.ColorUtil;
+import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class IslandsCommand implements CommandExecutor, TabCompleter {
+    private final IslandsRPGPlugin plugin;
+
+    public IslandsCommand(IslandsRPGPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        try {
+            if (args.length == 0) {
+                if (sender instanceof Player player) plugin.guis().openMain(player);
+                else help(sender);
+                return true;
+            }
+            String sub = args[0].toLowerCase();
+            if (sender instanceof Player player) {
+                switch (sub) {
+                    case "stats" -> plugin.guis().openStats(player);
+                    case "profile" -> plugin.guis().openProfile(player);
+                    case "quests" -> plugin.guis().openQuests(player);
+                    case "islands", "isles" -> plugin.guis().openIslands(player);
+                    case "weapons" -> plugin.guis().openWeapons(player);
+                    case "help" -> help(sender);
+                    default -> {
+                        if (!admin(sender)) return true;
+                        admin(sender, sub, args);
+                    }
+                }
+            } else {
+                if (!admin(sender)) return true;
+                admin(sender, sub, args);
+            }
+        } catch (Exception e) {
+            sender.sendMessage(ColorUtil.color("&cᴇʀʀᴏʀ&7: " + e.getMessage()));
+        }
+        return true;
+    }
+
+    private boolean admin(CommandSender sender) {
+        if (!sender.hasPermission("islands.admin")) {
+            sender.sendMessage(ColorUtil.color("&cᴇʀʀᴏʀ&7: no permission."));
+            return false;
+        }
+        return true;
+    }
+
+    private void admin(CommandSender sender, String sub, String[] args) {
+        switch (sub) {
+            case "reload" -> { plugin.reloadAll(); sender.sendMessage(ColorUtil.color(plugin.message("reloaded"))); }
+            case "addxp" -> { Player target = player(sender, args, 1); if (target != null && num(args, 2)) plugin.levels().addXp(target, Long.parseLong(args[2])); }
+            case "setlevel" -> { Player target = player(sender, args, 1); if (target != null && num(args, 2)) plugin.levels().setLevel(target, Integer.parseInt(args[2])); }
+            case "money" -> { Player target = player(sender, args, 2); if (target != null && args.length > 3 && num(args, 3)) { if ("give".equalsIgnoreCase(args[1])) plugin.currency().addMoney(target, Long.parseLong(args[3])); else if ("set".equalsIgnoreCase(args[1])) plugin.currency().setMoney(target, Long.parseLong(args[3])); } }
+            case "fragments" -> { Player target = player(sender, args, 2); if (target != null && args.length > 3 && num(args, 3)) { if ("give".equalsIgnoreCase(args[1])) plugin.currency().addFragments(target, Long.parseLong(args[3])); else if ("set".equalsIgnoreCase(args[1])) plugin.currency().setFragments(target, Long.parseLong(args[3])); } }
+            case "points" -> { Player target = player(sender, args, 2); if (target != null && args.length > 3 && "give".equalsIgnoreCase(args[1]) && num(args, 3)) { var data = plugin.data().get(target); data.statPoints += Integer.parseInt(args[3]); plugin.data().save(data); } }
+            case "giveweapon" -> { Player target = player(sender, args, 1); if (target != null && args.length > 2) { ItemStack item = plugin.weapons().item(args[2]); if (item != null) target.getInventory().addItem(item); } }
+            case "givemagic" -> { Player target = player(sender, args, 1); if (target != null && args.length > 2) { ItemStack item = plugin.magic().item(args[2]); if (item != null) target.getInventory().addItem(item); } }
+            case "spawnmob" -> { if (sender instanceof Player player && args.length > 1) plugin.mobs().spawn(args[1], player.getLocation()); }
+            case "spawnboss" -> { if (sender instanceof Player player && args.length > 1) plugin.bosses().spawn(args[1], player.getLocation()); }
+            case "setislandspawn" -> { if (sender instanceof Player player && args.length > 1) plugin.islands().setSpawn(args[1], player.getLocation()); }
+            case "startquest" -> { Player target = player(sender, args, 1); if (target != null && args.length > 2) plugin.quests().start(target, args[2]); }
+            case "completequest" -> { Player target = player(sender, args, 1); if (target != null && args.length > 2) plugin.quests().complete(target, args[2]); }
+            default -> help(sender);
+        }
+    }
+
+    private Player player(CommandSender sender, String[] args, int index) {
+        if (args.length <= index) {
+            sender.sendMessage(ColorUtil.color("&cᴇʀʀᴏʀ&7: missing player."));
+            return null;
+        }
+        Player player = Bukkit.getPlayerExact(args[index]);
+        if (player == null) sender.sendMessage(ColorUtil.color("&cᴇʀʀᴏʀ&7: player not found."));
+        return player;
+    }
+
+    private boolean num(String[] args, int index) {
+        if (args.length <= index) return false;
+        try { Long.parseLong(args[index]); return true; } catch (Exception e) { return false; }
+    }
+
+    private void help(CommandSender sender) {
+        sender.sendMessage(ColorUtil.color("&bɪꜱʟᴀɴᴅꜱ&8 » &f/islands &7- open main menu"));
+        sender.sendMessage(ColorUtil.color("&bɪꜱʟᴀɴᴅꜱ&8 » &f/stats &7- open stats"));
+        sender.sendMessage(ColorUtil.color("&bɪꜱʟᴀɴᴅꜱ&8 » &f/quests &7- open quests"));
+        sender.sendMessage(ColorUtil.color("&bɪꜱʟᴀɴᴅꜱ&8 » &f/profile &7- view profile"));
+        sender.sendMessage(ColorUtil.color("&bɪꜱʟᴀɴᴅꜱ&8 » &f/weapons &7- view weapons"));
+        sender.sendMessage(ColorUtil.color("&bɪꜱʟᴀɴᴅꜱ&8 » &f/isles &7- travel between islands"));
+        if (sender.hasPermission("islands.admin")) {
+            sender.sendMessage(ColorUtil.color("&8&m----------------"));
+            sender.sendMessage(ColorUtil.color("&cᴀᴅᴍɪɴ&8 » &7/islands reload"));
+            sender.sendMessage(ColorUtil.color("&cᴀᴅᴍɪɴ&8 » &7/islands addxp <player> <amount>"));
+            sender.sendMessage(ColorUtil.color("&cᴀᴅᴍɪɴ&8 » &7/islands setlevel <player> <level>"));
+            sender.sendMessage(ColorUtil.color("&cᴀᴅᴍɪɴ&8 » &7/islands money give|set <player> <amount>"));
+            sender.sendMessage(ColorUtil.color("&cᴀᴅᴍɪɴ&8 » &7/islands fragments give|set <player> <amount>"));
+            sender.sendMessage(ColorUtil.color("&cᴀᴅᴍɪɴ&8 » &7/islands points give <player> <amount>"));
+            sender.sendMessage(ColorUtil.color("&cᴀᴅᴍɪɴ&8 » &7/islands giveweapon|givemagic <player> <id>"));
+            sender.sendMessage(ColorUtil.color("&cᴀᴅᴍɪɴ&8 » &7/islands spawnmob|spawnboss <id>"));
+            sender.sendMessage(ColorUtil.color("&cᴀᴅᴍɪɴ&8 » &7/islands setislandspawn <islandId>"));
+            sender.sendMessage(ColorUtil.color("&cᴀᴅᴍɪɴ&8 » &7/islands startquest|completequest <player> <questId>"));
+        }
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
+        List<String> base = new ArrayList<>(List.of("stats", "profile", "quests", "islands", "isles", "weapons", "help"));
+        if (sender.hasPermission("islands.admin")) base.addAll(List.of("reload", "addxp", "setlevel", "money", "fragments", "points", "giveweapon", "givemagic", "spawnmob", "spawnboss", "setislandspawn", "startquest", "completequest"));
+        if (args.length == 1) return base.stream().filter(option -> option.startsWith(args[0].toLowerCase())).toList();
+        if (args.length == 2 && List.of("addxp", "setlevel", "giveweapon", "givemagic", "startquest", "completequest").contains(args[0].toLowerCase())) return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+        if (args.length == 3 && "giveweapon".equalsIgnoreCase(args[0])) return plugin.weapons().all().stream().map(weapon -> weapon.id()).toList();
+        if (args.length == 3 && "givemagic".equalsIgnoreCase(args[0])) return plugin.magic().all().stream().map(magic -> magic.id()).toList();
+        if (args.length == 2 && "spawnmob".equalsIgnoreCase(args[0])) return plugin.mobs().all().stream().map(mob -> mob.id()).toList();
+        if (args.length == 2 && "spawnboss".equalsIgnoreCase(args[0])) return plugin.bosses().all().stream().map(boss -> boss.id()).toList();
+        if (args.length == 2 && "setislandspawn".equalsIgnoreCase(args[0])) return plugin.islands().all().stream().map(island -> island.id()).toList();
+        if (args.length == 3 && List.of("startquest", "completequest").contains(args[0].toLowerCase())) return plugin.quests().all().stream().map(quest -> quest.id()).toList();
+        if (args.length == 2 && List.of("money", "fragments", "points").contains(args[0].toLowerCase())) return List.of("give", "set");
+        if (args.length == 3 && List.of("money", "fragments", "points").contains(args[0].toLowerCase())) return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+        return List.of();
+    }
+}
