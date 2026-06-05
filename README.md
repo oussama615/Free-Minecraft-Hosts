@@ -1,4 +1,4 @@
-@@ -180,68 +180,65 @@ Plugin commands:
+Plugin commands:
  - `/empcontrol unlink`
  - `/empcontrol reload`
  - `/empcontrol testalert`
@@ -115,9 +115,6 @@
  - WebSocket envelopes include `serverId`, `timestamp`, `nonce`, `payload`, and `signature`; stale timestamps and nonce replays are rejected.
  - Remote console is OWNER-only, policy-checked, audited, signed by the backend, and dispatched only through Bukkit's console sender.
  - No file manager, plugin upload, shell command execution, server-file exposure, arbitrary class loading, or file browsing is implemented.
- 
-EOF
-)
 
 ## IslandForge local island generator
 
@@ -145,7 +142,10 @@ IslandForge writes three files next to the output path:
 
 - `*.schem` — Sponge/WorldEdit v2 schematic containing generated terrain and features.
 - `*.preview.png` — top-down color preview with feature markers.
+
 - `*.metadata.json` — generation settings, seed, palette, placed feature coordinates, and layout-specific zone coordinates.
+=======
+- `*.metadata.json` — generation settings, seed, palette, and placed feature coordinates.
 
 ### Inputs and options
 
@@ -174,6 +174,8 @@ python islandforge.py masks/spawn.png \
   --output rpg_spawn_hub.schem
 ```
 
+=======
+- `--seed`: optional deterministic seed for repeatable generation.
 ### Theme examples
 
 ```bash

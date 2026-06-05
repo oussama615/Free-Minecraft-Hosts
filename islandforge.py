@@ -1,12 +1,3 @@
-#!/usr/bin/env python3
-"""IslandForge: generate themed Minecraft island schematics from an image mask and prompt.
-
-The tool can read/write PNG masks and previews with the Python standard
-library. Pillow is optional but recommended because it also enables JPG input
-and higher-quality image resizing. Schematic generation is self-contained NBT
-and gzip encoding.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -175,6 +166,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--height", type=int, default=24, help="Maximum terrain relief in blocks.")
     parser.add_argument("--detail", choices=sorted(DETAILS), default="balanced")
     parser.add_argument("--output", required=True, help="Output WorldEdit/FAWE .schem path.")
+    codex/build-islandforge-tool-for-minecraft-islands-71bkoo
     parser.add_argument("--layout", choices=("island", "spawn_hub"), default="island", help="Generation layout. Use spawn_hub for a structured RPG starter spawn island.")
     parser.add_argument("--seed", type=int, default=None, help="Optional deterministic seed. Defaults to image/prompt-derived seed.")
     return parser.parse_args()
@@ -402,12 +394,20 @@ def choose_feature_spots(points: Sequence[Tuple[int, int, int]], features: Seque
     return spots
 
 
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
 def build_terrain(mask: List[List[bool]], theme: Dict[str, object], requested_height: int, seed: int, layout: str = "island") -> Tuple[Schematic, List[List[int]]]:
+=======
+def build_terrain(mask: List[List[bool]], theme: Dict[str, object], requested_height: int, seed: int) -> Tuple[Schematic, List[List[int]]]:
+main
     size = len(mask)
     dist = distance_to_edge(mask)
     max_dist = max((dist[z][x] for z in range(size) for x in range(size) if mask[z][x]), default=1)
-    heights = [[0 for _ in range(size)] for _ in range(size)]
+    heights = [[0 for _ in range(size)] for _ in range(size)
+    codex/build-islandforge-tool-for-minecraft-islands-71bkoo
     world_height = max(16, requested_height + (44 if layout == "spawn_hub" else 24))
+=======
+    world_height = max(16, requested_height + 24)
+    main
     schem = Schematic(size, world_height, size)
     for z in range(size):
         for x in range(size):
@@ -418,6 +418,7 @@ def build_terrain(mask: List[List[bool]], theme: Dict[str, object], requested_he
             thickness = int(4 + min(14, dist[z][x] * 0.55) + value_noise(x * 0.14, z * 0.14, seed + 7, 3) * 5)
             bottom = max(1, heights[z][x] - thickness)
             for y in range(bottom, heights[z][x] + 1):
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
                 if layout == "spawn_hub":
                     surface_noise = value_noise(x * 0.09, z * 0.09, seed + 401, 3)
                     deep_noise = value_noise(x * 0.16, z * 0.16, seed + 402, 2)
@@ -447,6 +448,9 @@ def build_terrain(mask: List[List[bool]], theme: Dict[str, object], requested_he
                         else:
                             block = str(theme["base"])
                 elif y == heights[z][x]:
+=======
+                if y == heights[z][x]:
+main
                     block = str(theme["top"])
                 elif y >= heights[z][x] - 3:
                     block = str(theme["filler"])
@@ -644,6 +648,7 @@ def apply_features(schem: Schematic, heights: List[List[int]], mask: List[List[b
             schem.set(f.x, heights[f.z][f.x] + 1, f.z, str(theme["flower"]))
 
 
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
 SPAWN_PATH_BLOCK = "minecraft:stone_bricks"
 SPAWN_PATH_BORDER = "minecraft:cobblestone"
 SPAWN_PLAZA_BLOCK = "minecraft:polished_andesite"
@@ -931,6 +936,8 @@ def apply_spawn_hub_layout(schem: Schematic, heights: List[List[int]], mask: Lis
     }
 
 
+=======
+main
 def write_varints(ids: Iterable[int]) -> bytes:
     out = bytearray()
     for value in ids:
@@ -1024,7 +1031,11 @@ def write_preview(path: str, mask: List[List[bool]], heights: List[List[int]], f
             if mask[z][x] and heights[z][x] > 0:
                 shade = 0.62 + 0.45 * heights[z][x] / max_h
                 pixels[z * size + x] = tuple(min(255, int(c * shade)) for c in base)
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
     colors = {"tree": (35, 105, 38), "ruins": (170, 170, 150), "temples": (230, 205, 120), "caves": (10, 10, 12), "docks": (130, 83, 45), "boss_area": (220, 35, 35), "mob_area": (150, 45, 180), "towers": (210, 210, 210), "statues": (115, 180, 180), "decor": (245, 215, 90), "main_plaza": (235, 235, 210), "secondary_plaza": (190, 190, 180), "npc_spot": (80, 220, 255), "boss_arena": (230, 40, 40), "dock_area": (155, 95, 45), "windmill_area": (240, 240, 160)}
+=======
+    colors = {"tree": (35, 105, 38), "ruins": (170, 170, 150), "temples": (230, 205, 120), "caves": (10, 10, 12), "docks": (130, 83, 45), "boss_area": (220, 35, 35), "mob_area": (150, 45, 180), "towers": (210, 210, 210), "statues": (115, 180, 180), "decor": (245, 215, 90)}
+main
     for f in features:
         r = max(1, min(5, f.radius // 2))
         color = colors.get(f.kind, (255, 255, 255))
@@ -1053,10 +1064,17 @@ def write_preview(path: str, mask: List[List[bool]], heights: List[List[int]], f
             write_rgb_png(path, size, size, pixels)
 
 
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
 def island_seed(image_path: str, prompt: str, theme: str, layout: str, explicit: int | None) -> int:
     if explicit is not None:
         return explicit
     payload = f"{Path(image_path).name}|{prompt}|{theme}|{layout}"
+=======
+def island_seed(image_path: str, prompt: str, theme: str, explicit: int | None) -> int:
+    if explicit is not None:
+        return explicit
+    payload = f"{Path(image_path).name}|{prompt}|{theme}"
+main
     seed = 0x811C9DC5
     for b in payload.encode("utf-8"):
         seed ^= b
@@ -1076,11 +1094,16 @@ def validate_args(args: argparse.Namespace) -> None:
 def main() -> int:
     args = parse_args()
     validate_args(args)
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
     seed = island_seed(args.image, args.prompt, args.theme, args.layout, args.seed)
+=======
+    seed = island_seed(args.image, args.prompt, args.theme, args.seed)
+main
     rng = random.Random(seed)
     detail = DETAILS[args.detail]
     mask = smooth_mask(load_mask(args.image, args.size), int(detail["passes"]))
     theme = THEMES[args.theme]
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
     schem, heights = build_terrain(mask, theme, args.height, seed, args.layout)
     points = land_points(mask, heights)
     feature_names = prompt_features(args.prompt, args.theme)
@@ -1099,6 +1122,13 @@ def main() -> int:
     else:
         features = choose_feature_spots(points, feature_names, args.detail, rng)
         apply_features(schem, heights, mask, features, theme, rng)
+=======
+    schem, heights = build_terrain(mask, theme, args.height, seed)
+    points = land_points(mask, heights)
+    feature_names = prompt_features(args.prompt, args.theme)
+    features = choose_feature_spots(points, feature_names, args.detail, rng)
+    apply_features(schem, heights, mask, features, theme, rng)
+main
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -1112,13 +1142,19 @@ def main() -> int:
         "size": args.size,
         "height": args.height,
         "detail": args.detail,
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
         "layout": args.layout,
+=======
+main
         "seed": seed,
         "schematic": os.path.abspath(output),
         "preview": os.path.abspath(preview),
         "features_requested": feature_names,
         "features_placed": [f.__dict__ for f in features],
+codex/build-islandforge-tool-for-minecraft-islands-71bkoo
         **layout_metadata,
+=======
+main
         "palette": sorted(schem.palette),
         "format": "Sponge schematic v2 (.schem), gzip-compressed NBT",
     }
