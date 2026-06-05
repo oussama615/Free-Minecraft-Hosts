@@ -1,0 +1,23 @@
+quests:
+  starter_kill_zombies:
+    display-name: "&6ᴋɪʟʟ 4 ᴢᴏᴍʙɪᴇꜱ"
+    island: starter
+    type: KILL
+    target: starter_zombie
+    amount: 4
+    rewards: {xp: 120, money: 35, fragments: 2}
+    next: starter_kill_skeletons
+  starter_kill_skeletons:
+    display-name: "&6ᴋɪʟʟ 6 ꜱᴋᴇʟᴇᴛᴏɴꜱ"
+    island: starter
+    type: KILL
+    target: starter_skeleton
+    amount: 6
+    rewards: {xp: 180, money: 50, fragments: 3}
+  starter_boss:
+    display-name: "&6ᴅᴇꜰᴇᴀᴛ ʀᴏᴛᴛᴇɴ ʙʀᴜᴛᴇ"
+    island: starter
+    type: BOSS_KILL
+    target: rotten_brute
+    amount: 1
+    rewards: {xp: 1500, money: 400, fragments: 15}

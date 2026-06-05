@@ -1,0 +1,16 @@
+magic-items:
+  ember_fist:
+    material: BLAZE_ROD
+    type: FIST
+    display-name: "&cᴇᴍʙᴇʀ ꜰɪꜱᴛ"
+    required-level: 200
+    damage: 18
+    cooldown-seconds: 3
+    magic-scaling: 0.04
+    glow: true
+    lore: ["&7ᴅᴀᴍᴀɢᴇ: &f+18", "&7ᴍᴀɢɪᴄ: &fꜰɪʀᴇ", "&7ᴄᴏᴏʟᴅᴏᴡɴ: &f3s"]
+    particles:
+      held: {enabled: true, particle: FLAME, count: 10, interval-ticks: 8, radius: 0.6, java-only: true}
+      hit: {enabled: true, particle: LAVA, count: 12, java-only: true}
+    sound: {hit: ITEM_FIRECHARGE_USE}
+    effect: {type: BURN, duration-seconds: 3, amplifier: 1}
