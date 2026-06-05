@@ -118,3 +118,67 @@
  
 EOF
 )
+
+## IslandForge local island generator
+
+IslandForge is a local Python tool that turns a top-down PNG/JPG island mask and a text prompt into a WorldEdit/FAWE-compatible `.schem` file. The image controls land versus empty space, while the prompt and theme control structures, mood, decorations, and block palette.
+
+### Install
+
+```bash
+python -m pip install -r requirements-islandforge.txt
+```
+
+### Basic usage
+
+```bash
+python islandforge.py input.png \
+  --theme jungle \
+  --prompt "Create a jungle island with a ruined temple, curved terrain, a hidden cave, rich foliage, and a warm green palette." \
+  --size 150 \
+  --height 25 \
+  --detail detailed \
+  --output jungle_island.schem
+```
+
+IslandForge writes three files next to the output path:
+
+- `*.schem` — Sponge/WorldEdit v2 schematic containing generated terrain and features.
+- `*.preview.png` — top-down color preview with feature markers.
+- `*.metadata.json` — generation settings, seed, palette, placed feature coordinates, and layout-specific zone coordinates.
+
+### Inputs and options
+
+- Positional `image`: PNG/JPG mask. Bright, opaque pixels become land; dark or transparent pixels become empty space.
+- `--prompt`: text description used to place details such as ruins, trees, paths, caves, docks, temples, boss areas, mob areas, towers, and statues.
+- `--theme`: one of `starter`, `mine`, `desert`, `jungle`, `frost`, `arena`, or `ancient`.
+- `--size`: output width/length in blocks, from 16 to 512.
+- `--height`: maximum terrain relief, from 6 to 128.
+- `--detail`: `simple`, `balanced`, `detailed`, or `epic`.
+- `--output`: destination `.schem` path.
+- `--layout`: `island` for prompt-led decorative islands, or `spawn_hub` for a structured premium RPG starter spawn island.
+- `--seed`: optional deterministic seed for repeatable generation.
+
+### Spawn hub layout
+
+Use `--layout spawn_hub` when the island should be a readable RPG starter spawn instead of a generic decorative island. This mode always stamps a large central plaza, secondary plaza, roughly 12 NPC/bot pads, clean stone roads, medieval buildings, a raised windmill hill, an edge dock/travel area, and an elevated boss/combat arena. The prompt still controls mood and decorative flavor, but the hub structure remains fixed and clear. Metadata includes `main_plaza`, `secondary_plaza`, `npc_spots`, `boss_arena`, `dock_area`, and `windmill_area` entries for downstream server/plugin setup.
+
+```bash
+python islandforge.py masks/spawn.png \
+  --layout spawn_hub \
+  --theme starter \
+  --prompt "Premium medieval RPG starter spawn with quest NPCs, cozy market buildings, warm lanterns, forest details, and a heroic boss portal." \
+  --size 180 \
+  --height 32 \
+  --detail epic \
+  --output rpg_spawn_hub.schem
+```
+
+### Theme examples
+
+```bash
+python islandforge.py masks/circle.png --theme starter --prompt "cozy starter island with trees, paths, and a small ruin" --size 96 --height 18 --detail balanced --output starter.schem
+python islandforge.py masks/cavern.jpg --theme mine --prompt "rocky mine island with caves, mob area, ore details, and wooden supports" --size 128 --height 32 --detail detailed --output mine.schem
+python islandforge.py masks/arena.png --theme arena --prompt "boss arena island with towers, mob spawns, statues, and dramatic red accents" --size 160 --height 28 --detail epic --output arena.schem
+python islandforge.py masks/ancient.png --theme ancient --prompt "ancient floating ruin with statues, cracked paths, temple, and hidden cave" --size 140 --height 30 --detail detailed --output ancient.schem
+```
