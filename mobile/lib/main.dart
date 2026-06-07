@@ -1,10 +1,11 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const StrawIOVoiceChatApp());
-}
+import 'backend/voice_backend_client.dart';
+
+void main() => runApp(const StrawIOVoiceChatApp());
 
 const _background = Color(0xFF050607);
 const _surface = Color(0xFF101214);
@@ -34,68 +35,10 @@ class StrawIOVoiceChatApp extends StatelessWidget {
           surface: _surface,
           error: _danger,
         ),
-        fontFamily: 'sans',
       ),
       home: const VoiceChatHomePage(),
     );
   }
-}
-
-enum VoiceConnectionState {
-  initializing,
-  waitingForMinecraft,
-  minecraftDetected,
-  waitingForSupportedServer,
-  connecting,
-  connected,
-  disconnected,
-  unsupportedServer,
-  error,
-}
-
-class VoiceStatus {
-  const VoiceStatus({
-    required this.state,
-    required this.playerName,
-    required this.serverName,
-  });
-
-  final VoiceConnectionState state;
-  final String? playerName;
-  final String? serverName;
-
-  String get headline => switch (state) {
-        VoiceConnectionState.initializing => 'Initializing secure connection',
-        VoiceConnectionState.waitingForMinecraft =>
-          'Auto-detecting supported Minecraft server',
-        VoiceConnectionState.minecraftDetected => 'Minecraft detected',
-        VoiceConnectionState.waitingForSupportedServer =>
-          'Waiting for a supported server',
-        VoiceConnectionState.connecting => 'Connecting automatically',
-        VoiceConnectionState.connected => 'Connected automatically',
-        VoiceConnectionState.disconnected => 'Connection lost',
-        VoiceConnectionState.unsupportedServer => 'Unsupported server',
-        VoiceConnectionState.error => 'Connection unavailable',
-      };
-
-  String get stateLabel => switch (state) {
-        VoiceConnectionState.initializing => 'Initializing',
-        VoiceConnectionState.waitingForMinecraft => 'Standby',
-        VoiceConnectionState.minecraftDetected => 'Minecraft detected',
-        VoiceConnectionState.waitingForSupportedServer => 'Waiting',
-        VoiceConnectionState.connecting => 'Connecting',
-        VoiceConnectionState.connected => 'Connected Automatically',
-        VoiceConnectionState.disconnected => 'Disconnected',
-        VoiceConnectionState.unsupportedServer => 'Unsupported',
-        VoiceConnectionState.error => 'Error',
-      };
-
-  Color get accent => switch (state) {
-        VoiceConnectionState.connected => _cyan,
-        VoiceConnectionState.error || VoiceConnectionState.disconnected =>
-          _danger,
-        _ => _gold,
-      };
 }
 
 class VoiceChatHomePage extends StatefulWidget {
@@ -107,33 +50,95 @@ class VoiceChatHomePage extends StatefulWidget {
 
 class _VoiceChatHomePageState extends State<VoiceChatHomePage>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _pulseController;
-
-  // Production starts safely in standby. Real values will come from the future
-  // backend and Minecraft plugin, never from hardcoded player data.
-  final VoiceStatus _status = const VoiceStatus(
-    state: VoiceConnectionState.waitingForMinecraft,
-    playerName: null,
-    serverName: null,
-  );
+  late final AnimationController _pulse;
+  late final VoiceBackendClient _backend;
+  StreamSubscription<BackendSnapshot>? _subscription;
+  BackendSnapshot _snapshot =
+      const BackendSnapshot(state: BackendState.initializing);
+  bool _linking = false;
 
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
+    _pulse = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2200),
     )..repeat(reverse: true);
+    _backend = VoiceBackendClient();
+    _subscription = _backend.snapshots.listen((snapshot) {
+      if (mounted) setState(() => _snapshot = snapshot);
+    });
+    unawaited(_backend.initialize());
   }
 
   @override
   void dispose() {
-    _pulseController.dispose();
+    _subscription?.cancel();
+    unawaited(_backend.dispose());
+    _pulse.dispose();
     super.dispose();
+  }
+
+  Future<void> _showLinkDialog() async {
+    final controller = TextEditingController();
+    final code = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: _surface,
+        title: const Text('Link Minecraft account'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Run /voice link in Minecraft, then enter the temporary code.',
+              style: TextStyle(color: _muted, height: 1.4),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.characters,
+              decoration: const InputDecoration(
+                labelText: 'Link code',
+                hintText: 'STR-123456',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Link'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (code == null || code.trim().isEmpty) return;
+
+    setState(() => _linking = true);
+    try {
+      await _backend.claim(code);
+    } on BackendException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _linking = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final status = _ViewStatus.fromSnapshot(_snapshot);
     return Scaffold(
       body: Stack(
         children: [
@@ -141,24 +146,56 @@ class _VoiceChatHomePageState extends State<VoiceChatHomePage>
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final horizontalPadding = constraints.maxWidth < 420 ? 20.0 : 28.0;
-                final maxWidth = math.min(constraints.maxWidth - (horizontalPadding * 2), 560.0);
-
+                final padding = constraints.maxWidth < 420 ? 20.0 : 28.0;
+                final width = math.min(
+                  constraints.maxWidth - padding * 2,
+                  560.0,
+                );
                 return Center(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      20,
-                      horizontalPadding,
-                      28,
-                    ),
+                    padding: EdgeInsets.fromLTRB(padding, 20, padding, 28),
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(maxWidth: maxWidth),
+                      constraints: BoxConstraints(maxWidth: width),
                       child: Column(
                         children: [
-                          _BrandHeader(animation: _pulseController),
+                          _BrandHeader(animation: _pulse),
                           const SizedBox(height: 28),
-                          _StatusCard(status: _status),
+                          _StatusCard(status: status),
+                          if (_snapshot.state == BackendState.unlinked ||
+                              _snapshot.state == BackendState.expired) ...[
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: _linking ? null : _showLinkDialog,
+                                icon: _linking
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(Icons.link_rounded),
+                                label: Text(
+                                  _linking
+                                      ? 'Linking...'
+                                      : 'Link Minecraft Account',
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (_snapshot.state == BackendState.unavailable) ...[
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                onPressed: _backend.initialize,
+                                icon: const Icon(Icons.refresh_rounded),
+                                label: const Text('Retry Connection'),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 22),
                           const _StudioCreditCard(),
                           const SizedBox(height: 24),
@@ -177,9 +214,87 @@ class _VoiceChatHomePageState extends State<VoiceChatHomePage>
   }
 }
 
+class _ViewStatus {
+  const _ViewStatus({
+    required this.headline,
+    required this.player,
+    required this.server,
+    required this.status,
+    required this.accent,
+  });
+
+  final String headline;
+  final String player;
+  final String server;
+  final String status;
+  final Color accent;
+
+  factory _ViewStatus.fromSnapshot(BackendSnapshot snapshot) {
+    return switch (snapshot.state) {
+      BackendState.initializing => const _ViewStatus(
+          headline: 'Initializing secure connection',
+          player: 'Not detected',
+          server: 'Waiting for Minecraft',
+          status: 'Initializing',
+          accent: _gold,
+        ),
+      BackendState.unavailable => const _ViewStatus(
+          headline: 'Voice backend unavailable',
+          player: 'Not detected',
+          server: 'Waiting for Minecraft',
+          status: 'Offline',
+          accent: _danger,
+        ),
+      BackendState.unlinked || BackendState.expired => _ViewStatus(
+          headline: 'Link your account once to continue',
+          player: snapshot.player ?? 'Not linked',
+          server: 'Waiting for Minecraft',
+          status: 'Link required',
+          accent: _gold,
+        ),
+      BackendState.linking => const _ViewStatus(
+          headline: 'Linking Minecraft account',
+          player: 'Verifying code',
+          server: 'Waiting for Minecraft',
+          status: 'Linking',
+          accent: _gold,
+        ),
+      BackendState.connecting => _ViewStatus(
+          headline: 'Connecting automatically',
+          player: snapshot.player ?? 'Detecting player',
+          server: snapshot.server ?? 'Waiting for Minecraft',
+          status: 'Connecting',
+          accent: _gold,
+        ),
+      BackendState.connected => _ViewStatus(
+          headline: snapshot.online
+              ? 'Connected automatically'
+              : 'Linked and waiting for Minecraft',
+          player: snapshot.player ?? 'Linked player',
+          server: snapshot.server ?? 'Waiting for Minecraft',
+          status: snapshot.online ? 'Connected Automatically' : 'Standby',
+          accent: snapshot.online ? _cyan : _gold,
+        ),
+      BackendState.disconnected => _ViewStatus(
+          headline: 'Connection lost — reconnecting',
+          player: snapshot.player ?? 'Linked player',
+          server: snapshot.server ?? 'Waiting for Minecraft',
+          status: 'Reconnecting',
+          accent: _danger,
+        ),
+      BackendState.error => _ViewStatus(
+          headline: snapshot.message ?? 'Connection unavailable',
+          player: snapshot.player ?? 'Not detected',
+          server: snapshot.server ?? 'Waiting for Minecraft',
+          status: 'Error',
+          accent: _danger,
+        ),
+    };
+  }
+}
+
 class _BrandHeader extends StatelessWidget {
   const _BrandHeader({required this.animation});
-
   final Animation<double> animation;
 
   @override
@@ -188,35 +303,27 @@ class _BrandHeader extends StatelessWidget {
       children: [
         AnimatedBuilder(
           animation: animation,
-          builder: (context, child) {
-            final glow = 0.22 + (animation.value * 0.18);
-            return Container(
-              width: 126,
-              height: 126,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    _gold.withValues(alpha: glow),
-                    _gold.withValues(alpha: 0.05),
-                    Colors.transparent,
-                  ],
-                ),
+          builder: (context, child) => Container(
+            width: 126,
+            height: 126,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  _gold.withValues(alpha: 0.22 + animation.value * 0.18),
+                  _gold.withValues(alpha: 0.05),
+                  Colors.transparent,
+                ],
               ),
-              child: child,
-            );
-          },
+            ),
+            child: child,
+          ),
           child: const _MicrophoneMark(),
         ),
         const SizedBox(height: 16),
         RichText(
-          textAlign: TextAlign.center,
           text: const TextSpan(
-            style: TextStyle(
-              fontSize: 34,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.2,
-            ),
+            style: TextStyle(fontSize: 34, fontWeight: FontWeight.w800),
             children: [
               TextSpan(text: 'Straw', style: TextStyle(color: _text)),
               TextSpan(text: 'IO', style: TextStyle(color: _goldBright)),
@@ -224,30 +331,14 @@ class _BrandHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const _GoldLine(),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Text(
-                'VOICECHAT',
-                style: TextStyle(
-                  color: _goldBright,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 4.2,
-                  shadows: [
-                    Shadow(
-                      color: _gold.withValues(alpha: 0.35),
-                      blurRadius: 12,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const _GoldLine(),
-          ],
+        const Text(
+          'VOICECHAT',
+          style: TextStyle(
+            color: _goldBright,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 4.2,
+          ),
         ),
       ],
     );
@@ -256,59 +347,24 @@ class _BrandHeader extends StatelessWidget {
 
 class _MicrophoneMark extends StatelessWidget {
   const _MicrophoneMark();
-
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          for (final offset in const [-45.0, -33.0, 33.0, 45.0])
-            Transform.translate(
-              offset: Offset(offset, 0),
-              child: Container(
-                width: 3,
-                height: offset.abs() > 40 ? 28 : 44,
-                decoration: BoxDecoration(
-                  color: _gold.withValues(alpha: 0.65),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
+      child: Container(
+        width: 74,
+        height: 96,
+        decoration: BoxDecoration(
+          color: _surface,
+          borderRadius: BorderRadius.circular(38),
+          border: Border.all(color: _goldBright, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: _gold.withValues(alpha: 0.28),
+              blurRadius: 24,
             ),
-          Container(
-            width: 74,
-            height: 96,
-            decoration: BoxDecoration(
-              color: _surface,
-              borderRadius: BorderRadius.circular(38),
-              border: Border.all(color: _goldBright, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: _gold.withValues(alpha: 0.28),
-                  blurRadius: 24,
-                ),
-              ],
-            ),
-            child: const Icon(Icons.mic_rounded, color: _goldBright, size: 48),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _GoldLine extends StatelessWidget {
-  const _GoldLine();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 38,
-      height: 1,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.transparent, _gold.withValues(alpha: 0.8)],
+          ],
         ),
+        child: const Icon(Icons.mic_rounded, color: _goldBright, size: 48),
       ),
     );
   }
@@ -316,8 +372,7 @@ class _GoldLine extends StatelessWidget {
 
 class _StatusCard extends StatelessWidget {
   const _StatusCard({required this.status});
-
-  final VoiceStatus status;
+  final _ViewStatus status;
 
   @override
   Widget build(BuildContext context) {
@@ -326,7 +381,6 @@ class _StatusCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 width: 44,
@@ -342,28 +396,13 @@ class _StatusCard extends StatelessWidget {
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      status.headline,
-                      style: const TextStyle(
-                        color: _text,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'The app connects automatically when a supported session is available.',
-                      style: TextStyle(
-                        color: _muted,
-                        fontSize: 12.5,
-                        height: 1.45,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  status.headline,
+                  style: const TextStyle(
+                    color: _text,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -372,19 +411,19 @@ class _StatusCard extends StatelessWidget {
           _StatusRow(
             icon: Icons.person_outline_rounded,
             label: 'Player',
-            value: status.playerName ?? 'Not detected',
+            value: status.player,
           ),
           const SizedBox(height: 12),
           _StatusRow(
             icon: Icons.dns_outlined,
             label: 'Server',
-            value: status.serverName ?? 'Waiting for Minecraft',
+            value: status.server,
           ),
           const SizedBox(height: 12),
           _StatusRow(
             icon: Icons.radio_button_checked_rounded,
             label: 'Status',
-            value: status.stateLabel,
+            value: status.status,
             valueColor: status.accent,
           ),
         ],
@@ -400,7 +439,6 @@ class _StatusRow extends StatelessWidget {
     required this.value,
     this.valueColor,
   });
-
   final IconData icon;
   final String label;
   final String value;
@@ -413,16 +451,12 @@ class _StatusRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: _surfaceSoft.withValues(alpha: 0.72),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.045)),
       ),
       child: Row(
         children: [
           Icon(icon, size: 18, color: _gold),
           const SizedBox(width: 10),
-          Text(
-            label,
-            style: const TextStyle(color: _muted, fontSize: 13),
-          ),
+          Text(label, style: const TextStyle(color: _muted, fontSize: 13)),
           const Spacer(),
           Flexible(
             child: Text(
@@ -444,11 +478,9 @@ class _StatusRow extends StatelessWidget {
 
 class _StudioCreditCard extends StatelessWidget {
   const _StudioCreditCard();
-
   @override
   Widget build(BuildContext context) {
     return _PremiumCard(
-      compact: true,
       child: Row(
         children: [
           Container(
@@ -457,9 +489,8 @@ class _StudioCreditCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: _gold.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: _gold.withValues(alpha: 0.35)),
             ),
-            child: const Icon(Icons.grass_rounded, color: _goldBright, size: 28),
+            child: const Icon(Icons.grass_rounded, color: _goldBright),
           ),
           const SizedBox(width: 14),
           const Expanded(
@@ -495,41 +526,24 @@ class _StudioCreditCard extends StatelessWidget {
 
 class _FooterMessage extends StatelessWidget {
   const _FooterMessage();
-
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          Icons.auto_awesome_rounded,
-          color: _gold.withValues(alpha: 0.8),
-          size: 15,
-        ),
-        const SizedBox(width: 8),
-        const Flexible(
-          child: Text(
-            'The app works automatically while you play.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: _muted, fontSize: 12.5),
-          ),
-        ),
-      ],
+    return const Text(
+      'The app works automatically while you play.',
+      textAlign: TextAlign.center,
+      style: TextStyle(color: _muted, fontSize: 12.5),
     );
   }
 }
 
 class _PremiumCard extends StatelessWidget {
-  const _PremiumCard({required this.child, this.compact = false});
-
+  const _PremiumCard({required this.child});
   final Widget child;
-  final bool compact;
-
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(compact ? 18 : 20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: _surface.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(24),
@@ -540,10 +554,6 @@ class _PremiumCard extends StatelessWidget {
             blurRadius: 28,
             offset: const Offset(0, 14),
           ),
-          BoxShadow(
-            color: _gold.withValues(alpha: 0.045),
-            blurRadius: 24,
-          ),
         ],
       ),
       child: child,
@@ -553,7 +563,6 @@ class _PremiumCard extends StatelessWidget {
 
 class _BackgroundGlow extends StatelessWidget {
   const _BackgroundGlow();
-
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
