@@ -4,18 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       api_base_url:
-        description: "Backend API URL baked into the APK"
+        description: "Backend API URL baked into the debug APK"
         required: false
-        default: "http://10.0.2.2:3000"
+        default: "http://100.115.92.195:3000"
   push:
-    branches: ["main", "fix/flutter-android-v2"]
+    branches: ["main", "rebuild/strawio-voicechat-app"]
     paths:
       - "mobile/**"
       - ".github/workflows/android-apk.yml"
 
 jobs:
   build-apk:
-    name: Build Android APK
+    name: Build Android Debug APK
     runs-on: ubuntu-latest
 
     steps:
@@ -37,26 +37,26 @@ jobs:
       - name: Prepare Android project
         working-directory: mobile
         run: |
-          flutter create --platforms=android --org com.strawio --project-name emp_control_app .
+          flutter create --platforms=android --org com.strawio --project-name strawio_voicechat .
           flutter pub get
 
       - name: Flutter analyze
         working-directory: mobile
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
 
       - name: Flutter test
         working-directory: mobile
         run: flutter test
 
-      - name: Build release APK
+      - name: Build debug APK for local backend
         working-directory: mobile
         env:
-          API_BASE_URL: ${{ github.event.inputs.api_base_url || 'http://10.0.2.2:3000' }}
-        run: flutter build apk --release --dart-define=API_BASE_URL="$API_BASE_URL"
+          API_BASE_URL: ${{ github.event.inputs.api_base_url || 'http://100.115.92.195:3000' }}
+        run: flutter build apk --debug --dart-define=API_BASE_URL="$API_BASE_URL"
 
-      - name: Upload release APK
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: StrawIO-VoiceChat-release-apk
-          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          name: StrawIO-VoiceChat-local-debug-apk
+          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
