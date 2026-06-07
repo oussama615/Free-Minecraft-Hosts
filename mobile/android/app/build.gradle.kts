@@ -32,12 +32,15 @@ android {
 
     buildTypes {
         release {
-            // CI uses the debug key until a production keystore is supplied securely.
             signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
             isShrinkResources = false
         }
     }
+}
+
+kotlin {
+    sourceSets.getByName("main").kotlin.setSrcDirs(listOf("src/flutterMain/kotlin"))
 }
 
 flutter {
