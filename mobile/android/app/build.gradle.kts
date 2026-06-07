@@ -26,6 +26,10 @@ android {
         versionName = flutter.versionName
     }
 
+    sourceSets {
+        getByName("main").java.setSrcDirs(listOf("src/flutterMain/kotlin"))
+    }
+
     buildTypes {
         release {
             // CI uses the debug key until a production keystore is supplied securely.
