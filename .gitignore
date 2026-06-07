@@ -1,9 +1,37 @@
+# Build outputs
 node_modules/
-dist/
+**/node_modules/
 build/
+**/build/
+dist/
 .gradle/
 .dart_tool/
+**/.dart_tool/
+
+# Flutter/Android local files
+local.properties
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+
+# Local machine and Android signing secrets
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+signing.properties
+release.properties
+secrets.properties
 .env
+.env.*
+api.env
+credentials.json
+
+# Logs and IDE
 *.log
+.idea/
+*.iml
+.DS_Store
 
 target/
