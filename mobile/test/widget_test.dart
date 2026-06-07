@@ -1,13 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:emp_control_app/main.dart';
-import 'package:emp_control_app/services/api_client.dart';
+import 'package:strawio_voicechat/main.dart';
 
 void main() {
-  testWidgets('shows the EMP Control login screen', (tester) async {
-    await tester.pumpWidget(EMPControlApp(api: ApiClient()));
+  testWidgets('shows StrawIO VoiceChat standby screen', (tester) async {
+    await tester.pumpWidget(const StrawIOVoiceChatApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('EMP CONTROL'), findsOneWidget);
-    expect(find.text('Enter Control Panel'), findsOneWidget);
+    expect(find.text('StrawIO'), findsOneWidget);
+    expect(find.text('VOICECHAT'), findsOneWidget);
+    expect(find.text('Not detected'), findsOneWidget);
+    expect(find.text('Waiting for Minecraft'), findsOneWidget);
+    expect(find.text('StrawIO Studio'), findsOneWidget);
   });
 }
