@@ -1,9 +1,26 @@
+# Build outputs
 node_modules/
-dist/
+**/node_modules/
 build/
 .gradle/
-.dart_tool/
-.env
-*.log
+**/build/
 
-target/
+# Local machine and Android signing secrets
+local.properties
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+signing.properties
+release.properties
+secrets.properties
+.env
+.env.*
+api.env
+credentials.json
+
+# IDE
+.idea/
+*.iml
+.DS_Store
