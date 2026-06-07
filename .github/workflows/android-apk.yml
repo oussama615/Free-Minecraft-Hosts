@@ -7,9 +7,8 @@ on:
         description: "Backend API URL baked into the APK"
         required: false
         default: "http://10.0.2.2:3000"
-
   push:
-    branches: ["main"]
+    branches: ["main", "fix/flutter-android-v2"]
     paths:
       - "mobile/**"
       - ".github/workflows/android-apk.yml"
@@ -32,22 +31,14 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.24.5"
           channel: "stable"
           cache: true
 
-      - name: Install Android NDK
+      - name: Prepare Android project
+        working-directory: mobile
         run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;28.2.13676358"
-
-      - name: Flutter version
-        working-directory: mobile
-        run: flutter --version
-
-      - name: Flutter pub get
-        working-directory: mobile
-        run: flutter pub get
+          flutter create --platforms=android --org com.strawio --project-name emp_control_app .
+          flutter pub get
 
       - name: Flutter analyze
         working-directory: mobile
@@ -61,7 +52,7 @@ jobs:
         working-directory: mobile
         env:
           API_BASE_URL: ${{ github.event.inputs.api_base_url || 'http://10.0.2.2:3000' }}
-        run: flutter build apk --release --dart-define=API_BASE_URL=$API_BASE_URL
+        run: flutter build apk --release --dart-define=API_BASE_URL="$API_BASE_URL"
 
       - name: Upload release APK
         uses: actions/upload-artifact@v4
