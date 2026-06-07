@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-API_BASE_URL="${1:-${API_BASE_URL:-http://10.0.2.2:3000}}"
+API_BASE_URL="${1:-${API_BASE_URL:-}}"
 cd "$(dirname "$0")/.."
 flutter pub get
 flutter build apk --release --dart-define=API_BASE_URL="$API_BASE_URL"

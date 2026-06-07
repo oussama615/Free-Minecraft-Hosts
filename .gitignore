@@ -2,11 +2,19 @@
 node_modules/
 **/node_modules/
 build/
-.gradle/
 **/build/
+dist/
+.gradle/
+.dart_tool/
+**/.dart_tool/
+
+# Flutter/Android local files
+local.properties
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
 
 # Local machine and Android signing secrets
-local.properties
 *.jks
 *.keystore
 *.p12
@@ -20,7 +28,8 @@ secrets.properties
 api.env
 credentials.json
 
-# IDE
+# Logs and IDE
+*.log
 .idea/
 *.iml
 .DS_Store

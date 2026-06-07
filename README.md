@@ -1,148 +1,193 @@
-# StrawIO VoiceChat Android
+StrawIO VoiceChat
 
-StrawIO VoiceChat is a native Android application foundation for a future Minecraft Bedrock voice-chat ecosystem developed by **StrawIO Studio**.
+StrawIO VoiceChat is a Flutter Android application developed by StrawIO Studio for a future cross-platform Minecraft voice-chat system.
 
-> Current phase: Android application only. The backend, Minecraft plugin, voice relay, real Minecraft detection, and real voice transmission are not included yet.
+«Current phase: Flutter Android application foundation. Real Minecraft detection, backend integration, plugin communication, and voice transmission are still under development.»
 
-## Product overview
+Project structure
 
-The app presents the StrawIO VoiceChat brand, a premium dark status interface, and safe local connection states. It is designed to later connect automatically when Minecraft Bedrock joins a server that supports the future StrawIO VoiceChat plugin.
+The Flutter application is located inside:
 
-Future architecture target:
+mobile/
 
-```text
+Future system architecture:
+
 StrawIO VoiceChat App
-↕
-Minecraft Bedrock Client Integration
-↕
-StrawIO VoiceChat Plugin
-↕
+        ↕
 StrawIO Voice Backend
-```
+        ↕
+StrawIOVoiceChat Minecraft Plugin
+        ↕
+Minecraft Java and Bedrock players
 
-## Supported Android versions
+Requirements
 
-- Minimum SDK: Android 10 / API 29.
-- Target SDK: API 35 in this repository configuration.
-- Java compatibility: 17.
-- UI: single-activity Jetpack Compose with Material 3.
+- Flutter stable
+- Dart SDK included with Flutter
+- Android SDK
+- Java 17 or the Java version required by the installed Flutter release
+- Android device or emulator
 
-## Build requirements
+Check the development environment:
 
-- Android SDK with API 35 and build tools installed.
-- Gradle 8.14+ or compatible wrapper if added by the release engineer.
-- JDK capable of compiling Java 17 bytecode.
-- Network access for first dependency resolution.
+flutter doctor -v
 
-## How to run
+Install dependencies
 
-```bash
-cd mobile/android
-gradle :app:assembleDebug
-```
+cd mobile
+flutter pub get
 
-Install the debug APK from:
+Run on Android emulator
 
-```text
-mobile/android/app/build/outputs/apk/debug/app-debug.apk
-```
+Android Emulator uses "10.0.2.2" to access services running on the host computer:
 
-## Architecture summary
+cd mobile
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
 
-The Android app uses Kotlin, Jetpack Compose, Material 3, MVVM, StateFlow, Kotlin Coroutines, Hilt, DataStore, Android Keystore, Gradle Kotlin DSL, and a single-activity architecture.
+"10.0.2.2" works only from an Android emulator.
 
-Important package areas:
+Run on a physical Android phone
 
-- `com.strawio.voicechat.ui` — Compose UI, premium dark theme, home screen, and local privacy dialog.
-- `com.strawio.voicechat.domain` — strongly typed voice chat states, safe errors, state formatting, and future service interfaces.
-- `com.strawio.voicechat.data` — safe local/no-op implementations for phase one.
-- `com.strawio.voicechat.security` — Android Keystore device identity foundation.
-- `com.strawio.voicechat.network` — HTTPS-only OkHttp foundation, TLS policy, redaction, and certificate pin rotation support.
-- `com.strawio.voicechat.di` — Hilt bindings.
+The phone and computer must be connected to the same Wi-Fi network.
 
-## State model
+Find the computer's local IP address and use it instead:
 
-Production starts in `WaitingForMinecraft`, rendered as:
+cd mobile
+flutter run --dart-define=API_BASE_URL=http://192.168.1.50:3000
 
-- Player: `Not detected`
-- Server: `Waiting for Minecraft`
-- Status: `Standby`
+Replace "192.168.1.50" with the actual local IP of the computer running the backend.
 
-Supported state types include initializing, waiting for Minecraft, Minecraft detected, waiting for supported server, connecting, connected automatically, connection lost, unsupported server, permission required, app update required, and error.
+The backend must listen on:
 
-`xk7` and `Hivel Network` are preview/debug sample values only and are not production identity defaults.
+0.0.0.0:3000
 
-## Security model
+Using "localhost" on the phone would point to the phone itself, not the computer.
 
-- No production secrets are stored in source code, resources, assets, native libraries, or BuildConfig.
-- Android Keystore generates a non-exportable EC P-256 device key pair.
-- DataStore stores only the public key identifier and non-sensitive preferences.
-- HTTPS-only network policy is configured.
-- Cleartext traffic is disabled in the manifest and network security config.
-- Certificate pinning support requires backup pins for rotation.
-- Release builds enable minification and resource shrinking.
-- Client anti-tamper/integrity checks are treated only as defense-in-depth signals.
+Build release APK
 
-## Privacy model
+For emulator development configuration:
 
-Phase one does not record audio, store audio, upload personal data, track users, show ads, use analytics, or create user accounts. Future voice features must request microphone permission explicitly before recording.
+cd mobile
+flutter build apk --release --dart-define=API_BASE_URL=http://10.0.2.2:3000
 
-See [`PRIVACY.md`](PRIVACY.md) for the complete local privacy notice.
+For a physical phone on the same network:
 
-## Permissions
+cd mobile
+flutter build apk --release --dart-define=API_BASE_URL=http://192.168.1.50:3000
 
-Only `android.permission.INTERNET` is declared for future backend communication. Microphone, storage, contacts, location, camera, SMS, phone, accessibility, overlay, VPN, and device administrator permissions are not declared in this phase.
+The APK output is:
 
-## Known limitations
+mobile/build/app/outputs/flutter-apk/app-release.apk
 
-- No real Minecraft Bedrock detection yet.
-- No backend connection yet.
-- No Minecraft plugin yet.
-- No voice relay or microphone recording yet.
-- No production release signing material is committed.
-- Certificate pins are not enabled until the backend endpoint and rotation plan are finalized.
+API base URL
 
-## Future integration plan
+The app should read the backend address using:
 
-### Backend next step
+const apiBaseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: '',
+);
 
-Define the public StrawIO VoiceChat backend API contract and implement a challenge-response handshake endpoint that accepts the Android Keystore public key identifier, verifies signed challenges server-side, enforces protocol version compatibility, and returns only sanitized connection metadata.
+Do not hardcode local or production backend addresses into Dart source code.
 
-### Minecraft 1.21.11 Paper/Purpur plugin next step
+Android embedding
 
-Create a separate plugin project that exposes a signed server capability advertisement for supported servers, then implement a plugin-to-backend registration handshake. Keep plugin signing private keys outside the Android app and repository.
+The Android project must use Flutter Android embedding v2.
 
-## Screenshots
+The main activity should import:
 
-Add approved production screenshots here after running the app on a device or emulator. The first screen should match the premium dark StrawIO microphone reference design.
+import io.flutter.embedding.android.FlutterActivity
 
-## Release signing
+Legacy Android v1 embedding APIs must not be used, including:
 
-Do not commit release keystores or passwords. Configure release signing with environment variables:
+io.flutter.app.FlutterActivity
+io.flutter.app.FlutterApplication
+PluginRegistry.Registrar
+GeneratedPluginRegistrant.registerWith
 
-```bash
-export STRAWIO_RELEASE_STORE_FILE=/secure/path/strawio-release.jks
-export STRAWIO_RELEASE_STORE_PASSWORD='***'
-export STRAWIO_RELEASE_KEY_ALIAS=strawio
-export STRAWIO_RELEASE_KEY_PASSWORD='***'
-cd mobile/android
-gradle :app:assembleRelease
-```
+The Android manifest should include:
 
-The current Gradle file falls back to the debug key only so CI can verify an unsigned-production-equivalent release build. Use a real signing config before distribution.
+<meta-data
+    android:name="flutterEmbedding"
+    android:value="2" />
 
-## Testing
+Development security
+
+- Do not commit API keys.
+- Do not commit database credentials.
+- Do not commit ".env" files.
+- Do not commit Android signing keystores.
+- Do not commit signing passwords.
+- Do not place backend master secrets inside the application.
+- Do not disable TLS certificate validation.
+- Do not enable unrestricted cleartext traffic in release builds.
+
+HTTP may be permitted only in debug builds for local network testing.
+
+Production communication must use HTTPS.
+
+Current application state
+
+The application currently focuses on:
+
+- StrawIO VoiceChat branding
+- Automatic connection status interface
+- Safe configuration foundation
+- Future backend integration preparation
+- Future Minecraft integration preparation
+
+The production interface must not hardcode a specific player name.
+
+Values such as:
+
+xk7
+Hivel Network
+
+may be used only as preview or debug data.
+
+The default production state should be:
+
+Player: Not detected
+Server: Waiting for Minecraft
+Status: Standby
+
+Tests and analysis
 
 Run:
 
-```bash
-cd mobile/android
-gradle :app:testDebugUnitTest
-gradle :app:lintDebug
-gradle :app:assembleDebug
-gradle :app:assembleRelease
-```
+cd mobile
+flutter analyze
+flutter test
 
-## Warning: do not commit secrets
+Then verify the release build:
 
-Never commit API keys, backend secrets, private keys, database credentials, plugin signing keys, keystores, signing passwords, local properties, generated credentials, or environment files.
+flutter build apk --release --dart-define=API_BASE_URL=http://10.0.2.2:3000
+
+GitHub Actions
+
+The build command must use a raw URL:
+
+- name: Build release APK
+  run: flutter build apk --release --dart-define=API_BASE_URL=http://10.0.2.2:3000
+
+Do not use Markdown link syntax inside the shell command.
+
+The artifact path is:
+
+mobile/build/app/outputs/flutter-apk/app-release.apk
+
+Known limitations
+
+- Real backend integration is not complete.
+- Real Minecraft Bedrock detection is not complete.
+- The Minecraft plugin is developed separately.
+- Voice recording and streaming are not complete.
+- "10.0.2.2" does not work on physical phones.
+- Local HTTP configuration must not be used for production.
+
+Developed by
+
+StrawIO Studio
+Minecraft & Discord Development Studio
+
+Website: "https://strawio.net"

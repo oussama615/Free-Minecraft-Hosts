@@ -10,7 +10,7 @@ class ApiClient {
 
   static const defaultBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:3000',
+    defaultValue: '',
   );
 
   final String baseUrl;
@@ -24,6 +24,10 @@ class ApiClient {
   }
 
   Future<bool> healthCheck() async {
+    if (baseUrl.isEmpty) {
+      return false;
+    }
+
     try {
       final res = await http
           .get(Uri.parse('$baseUrl/health'))
