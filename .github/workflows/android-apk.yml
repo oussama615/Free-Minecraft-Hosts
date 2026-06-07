@@ -8,7 +8,7 @@ on:
         required: false
         default: "http://10.0.2.2:3000"
   push:
-    branches: ["main", "fix/flutter-android-v2"]
+    branches: ["main", "rebuild/strawio-voicechat-app"]
     paths:
       - "mobile/**"
       - ".github/workflows/android-apk.yml"
@@ -37,7 +37,7 @@ jobs:
       - name: Prepare Android project
         working-directory: mobile
         run: |
-          flutter create --platforms=android --org com.strawio --project-name emp_control_app .
+          flutter create --platforms=android --org com.strawio --project-name strawio_voicechat .
           flutter pub get
 
       - name: Flutter analyze
